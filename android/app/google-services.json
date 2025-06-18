@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "620249493204",
+    "project_id": "kinroo-8b3a0",
+    "storage_bucket": "kinroo-8b3a0.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:620249493204:android:f0e7edb309e17330249541",
+        "android_client_info": {
+          "package_name": "com.example.kinroo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAA7Lxfwn60mjm9o5pC3ZyS1bFguSGtVcA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

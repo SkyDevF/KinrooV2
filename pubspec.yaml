@@ -1,0 +1,80 @@
+name: kinroo
+description: "A new Flutter project."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.8.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # 📌 ไอคอนและ UI
+  cupertino_icons: ^1.0.8
+  
+  # 📌 Firebase & ผู้ใช้
+  firebase_core: ^3.13.1
+  firebase_auth: ^5.5.4
+  cloud_firestore: ^5.6.8
+  
+  # 📌 ตัวช่วยจัดการข้อมูลและรูปภาพ
+  provider: ^6.1.5
+  image_picker: ^1.1.2
+  intl_utils: ^2.8.10
+  crystal_navigation_bar: ^1.0.4
+  iconly: ^1.0.1
+  video_player: ^2.9.5
+  shared_preferences: ^2.5.3
+  tflite_flutter: ^0.11.0
+  path_provider: ^2.1.5
+  image: ^4.5.4  # ✅ เปลี่ยนจาก 4.5.4 เป็น 3.0.2 ให้เข้ากับ tflite_flutter_helper
+  tensorflow_lite_flutter: ^3.0.0
+  camera: ^0.11.1
+  fl_chart: ^1.0.0
+  table_calendar: ^3.2.0
+  flutter_launcher_icons: ^0.13.1
+
+
+dependency_overrides:
+  image: ^3.0.2  
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  
+  flutter_lints: ^6.0.0
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  remove_alpha_ios: true
+  remove_alpha_android: true
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/icon/icon.png"
+  adaptive_icon_monochrome: "assets/icon/icon.png"
+  image_path: "assets/icon/icon.png"
+  min_sdk_android: 28
+
+flutter:
+  uses-material-design: true
+
+  # 📌 เพิ่ม assets สำหรับรูป BMI
+  assets:
+    - assets/bmi/girl_18.5.png
+    - assets/bmi/girl_18.5-24.5.png
+    - assets/bmi/girl_25-30.png
+    - assets/bmi/girl_35-39.5.png
+    - assets/bmi/girl_40.png
+    - assets/bmi/man_18.5-24.5.png
+    - assets/bmi/man_18.5.png
+    - assets/bmi/man_25-30.png
+    - assets/bmi/man_35-39.5.png
+    - assets/bmi/man_40.png
+    - assets/icon/welcome.png
+    - assets/icon/logo.png
+    - assets/icon/sum.png
+    - assets/videos/intro.mp4
+    - assets/models/kinrooV5.tflite
+    
