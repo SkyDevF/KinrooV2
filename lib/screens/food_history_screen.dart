@@ -270,65 +270,112 @@ class _FoodHistoryScreenState extends State<FoodHistoryScreen> {
     );
   }
 
-  Widget _buildDailyNutritionBox() {
-    return _buildCardWrapper(
-      title: 'พลังงานในวันนี้',
-      child: SizedBox(
-        height: 200,
-        child: BarChart(
-          BarChartData(
-            alignment: BarChartAlignment.spaceAround,
-            maxY: dailyNutrition['targetCalories'] > 0 ? dailyNutrition['targetCalories'].toDouble() * 1.2 : 2500,
-            barTouchData: BarTouchData(enabled: false),
-            titlesData: FlTitlesData(
-              show: true,
-              bottomTitles: AxisTitles(
-                sideTitles: SideTitles(
-                  showTitles: true,
-                  getTitlesWidget: (value, meta) {
-                    final titles = ['แคลลอรี่', 'โปรตีน', 'คาร์บ', 'ไขมัน'];
-                    return Text(titles[value.toInt()], style: const TextStyle(color: Colors.white, fontSize: 10));
-                  },
-                ),
-              ),
-              leftTitles: AxisTitles(
-                sideTitles: SideTitles(
-                  showTitles: true,
-                  getTitlesWidget: (value, meta) {
-                    return Text('${value.toInt()}', style: const TextStyle(color: Colors.white, fontSize: 10));
-                  },
-                  interval: dailyNutrition['targetCalories'] > 0 ? (dailyNutrition['targetCalories'] / 4).roundToDouble() : 500,
-                ),
-              ),
-              topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-              rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+ Widget _buildDailyNutritionBox() {
+  return _buildCardWrapper(
+    title: 'พลังงานในวันนี้',
+    child: Container(
+      height: 200,
+      padding: const EdgeInsets.all(16),
+      child: BarChart(
+        BarChartData(
+          alignment: BarChartAlignment.spaceEvenly,
+          maxY: _getMaxValue(),
+          barTouchData: BarTouchData(
+            enabled: true,
+            touchTooltipData: BarTouchTooltipData(
+              getTooltipColor: (group) => Colors.black87,
+              getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                final titles = ['แคลลอรี่', 'โปรตีน', 'คาร์บ', 'ไขมัน'];
+                final values = [
+                  dailyNutrition['calories'],
+                  dailyNutrition['protein'],
+                  dailyNutrition['carbs'],
+                  dailyNutrition['fat']
+                ];
+                return BarTooltipItem(
+                  '${titles[group.x]}\n${values[group.x]}',
+                  const TextStyle(color: Colors.white, fontSize: 12),
+                );
+              },
             ),
-            borderData: FlBorderData(show: false),
-            barGroups: [
-              _buildBarChartGroupData(0, dailyNutrition['calories'].toDouble(), const Color(0xFFE94560)),
-              _buildBarChartGroupData(1, dailyNutrition['protein'].toDouble(), Colors.red),
-              _buildBarChartGroupData(2, dailyNutrition['carbs'].toDouble(), Colors.orange),
-              _buildBarChartGroupData(3, dailyNutrition['fat'].toDouble(), Colors.yellow),
-            ],
           ),
+          titlesData: FlTitlesData(
+            show: true,
+            bottomTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                reservedSize: 40,
+                getTitlesWidget: (value, meta) {
+                  const titles = ['Calories', 'Proteins', 'Carbs', 'Fat'];
+                  if (value.toInt() >= 0 && value.toInt() < titles.length) {
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Text(
+                        titles[value.toInt()],
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    );
+                  }
+                  return const Text('');
+                },
+              ),
+            ),
+            leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          ),
+          gridData: const FlGridData(show: false),
+          borderData: FlBorderData(show: false),
+          barGroups: [
+            _buildNutritionBarData(0, dailyNutrition['calories'].toDouble(), const Color(0xFF4A90E2)),
+            _buildNutritionBarData(1, dailyNutrition['protein'].toDouble(), const Color(0xFF4A90E2)),
+            _buildNutritionBarData(2, dailyNutrition['carbs'].toDouble(), const Color(0xFF4A90E2)),
+            _buildNutritionBarData(3, dailyNutrition['fat'].toDouble(), const Color(0xFF4A90E2)),
+          ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
-  BarChartGroupData _buildBarChartGroupData(int x, double y, Color color) {
-    return BarChartGroupData(
-      x: x,
-      barRods: [
-        BarChartRodData(
-          toY: y,
-          color: color,
-          width: 20,
-          borderRadius: BorderRadius.circular(4),
+BarChartGroupData _buildNutritionBarData(int x, double y, Color color) {
+  return BarChartGroupData(
+    x: x,
+    barRods: [
+      BarChartRodData(
+        toY: y,
+        color: color,
+        width: 24,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(12),
+          topRight: Radius.circular(12),
         ),
-      ],
-    );
-  }
+        backDrawRodData: BackgroundBarChartRodData(
+          show: false,
+        ),
+      ),
+    ],
+  );
+}
+
+double _getMaxValue() {
+  final values = [
+    dailyNutrition['calories'].toDouble(),
+    dailyNutrition['protein'].toDouble(),
+    dailyNutrition['carbs'].toDouble(),
+    dailyNutrition['fat'].toDouble(),
+  ];
+  
+  final maxValue = values.reduce((a, b) => a > b ? a : b);
+  
+  // เพิ่ม 20% ของค่าสูงสุดเพื่อให้มีพื้นที่ว่างด้านบน
+  return maxValue * 1.2;
+}
+
 
   Widget _buildCaloriesProgressBox() {
     double progress = (dailyNutrition['targetCalories'] > 0)
@@ -360,7 +407,7 @@ class _FoodHistoryScreenState extends State<FoodHistoryScreen> {
                     height: 30,
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
-                        colors: [Color.fromARGB(255, 37, 156, 24), Color.fromARGB(255, 111, 255, 140)],
+                        colors: [Color.fromARGB(255, 38, 241, 16), Color.fromARGB(255, 8, 101, 27)],
                       ),
                       borderRadius: BorderRadius.circular(15),
                     ),
