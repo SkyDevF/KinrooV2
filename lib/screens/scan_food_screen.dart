@@ -206,16 +206,18 @@ class _ScanFoodScreenState extends State<ScanFoodScreen> with TickerProviderStat
     required IconData icon,
     required VoidCallback onPressed,
     Color? backgroundColor,
+    AlignmentGeometry? alignment, // Added alignment parameter
   }) {
     return Container(
       width: double.infinity,
       height: 60,
       margin: EdgeInsets.symmetric(vertical: 8),
+      alignment: alignment, // Apply alignment here
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: backgroundColor != null 
-            ? [backgroundColor, backgroundColor.withOpacity(0.8)]
-            : [primaryBlue, primaryBlue.withOpacity(0.8)],
+          colors: backgroundColor != null
+              ? [backgroundColor, backgroundColor.withOpacity(0.8)]
+              : [primaryBlue, primaryBlue.withOpacity(0.8)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -311,11 +313,7 @@ class _ScanFoodScreenState extends State<ScanFoodScreen> with TickerProviderStat
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [primaryBlue.withOpacity(0.1), Colors.white],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
+          color: primaryBrown, // Solid background color as requested
         ),
         child: SafeArea(
           child: FadeTransition(
@@ -334,7 +332,7 @@ class _ScanFoodScreenState extends State<ScanFoodScreen> with TickerProviderStat
                           "กำลังโหลดโมเดล AI...",
                           style: TextStyle(
                             fontSize: 16,
-                            color: primaryBrown,
+                            color: Colors.white, // Changed text color for contrast
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -363,6 +361,7 @@ class _ScanFoodScreenState extends State<ScanFoodScreen> with TickerProviderStat
               gradient: LinearGradient(
                 colors: [primaryBlue, primaryBrown],
                 begin: Alignment.topLeft,
+                // Changed end to bring brown color from left side
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(20),
@@ -395,25 +394,33 @@ class _ScanFoodScreenState extends State<ScanFoodScreen> with TickerProviderStat
               ],
             ),
           ),
-          
+
           SizedBox(height: 40),
-          
+
           // Action buttons
           _buildGradientButton(
             text: "เปิดกล้อง",
             icon: Icons.camera_alt,
             onPressed: () => _pickImage(ImageSource.camera),
           ),
-          
-          _buildGradientButton(
-            text: "เลือกจากแกลลอรี่",
-            icon: Icons.photo_library,
-            onPressed: () => _pickImage(ImageSource.gallery),
-            backgroundColor: primaryBrown,
+
+          // New positioning for "เลือกจากแกลลอรี่"
+          Align(
+            alignment: Alignment.bottomLeft, // Align to bottom left
+            child: SizedBox(
+              width: MediaQuery.of(context).size.width * 1.0, // Adjust width as needed
+              child: _buildGradientButton(
+                text: "เลือกจากแกลลอรี่",
+                icon: Icons.photo_library,
+                onPressed: () => _pickImage(ImageSource.gallery),
+                backgroundColor: primaryBlue, // Changed to primaryBlue for consistency as requested
+                alignment: Alignment.centerLeft, // Align content within the button
+              ),
+            ),
           ),
-          
+
           Spacer(),
-          
+
           // Info section
           Container(
             padding: EdgeInsets.all(20),
@@ -468,22 +475,25 @@ class _ScanFoodScreenState extends State<ScanFoodScreen> with TickerProviderStat
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Back button
-          Container(
-            margin: EdgeInsets.only(bottom: 20),
-            child: IconButton(
-              onPressed: () => setState(() => _image = null),
-              icon: Icon(Icons.arrow_back_ios, color: primaryBrown),
-              style: IconButton.styleFrom(
-                backgroundColor: Colors.white,
-                padding: EdgeInsets.all(12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+          // Back button (positioned at top left corner)
+          Align(
+            alignment: Alignment.topLeft,
+            child: Container(
+              margin: EdgeInsets.only(bottom: 20),
+              child: IconButton(
+                onPressed: () => setState(() => _image = null),
+                icon: Icon(Icons.arrow_back_ios, color: primaryBlue), // Changed color to primaryBlue
+                style: IconButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  padding: EdgeInsets.all(12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
             ),
           ),
-          
+
           // Image display
           Container(
             width: double.infinity,
@@ -506,9 +516,9 @@ class _ScanFoodScreenState extends State<ScanFoodScreen> with TickerProviderStat
               ),
             ),
           ),
-          
+
           SizedBox(height: 25),
-          
+
           // Food name input
           Container(
             padding: EdgeInsets.all(20),
@@ -552,14 +562,16 @@ class _ScanFoodScreenState extends State<ScanFoodScreen> with TickerProviderStat
                     filled: true,
                     fillColor: Colors.grey[50],
                   ),
-                  onChanged: (value) => setState(() {}),
+                  onChanged: (value) => setState(() {
+                    _getNutritionData(value); // Update nutrition data when food name changes
+                  }),
                 ),
               ],
             ),
           ),
-          
+
           SizedBox(height: 25),
-          
+
           // Nutrition info
           Text(
             "ข้อมูลโภชนาการ",
@@ -570,7 +582,7 @@ class _ScanFoodScreenState extends State<ScanFoodScreen> with TickerProviderStat
             ),
           ),
           SizedBox(height: 15),
-          
+
           GridView.count(
             crossAxisCount: 2,
             shrinkWrap: true,
@@ -605,9 +617,9 @@ class _ScanFoodScreenState extends State<ScanFoodScreen> with TickerProviderStat
               ),
             ],
           ),
-          
+
           SizedBox(height: 30),
-          
+
           // Save button
           _buildGradientButton(
             text: "บันทึกข้อมูล",
