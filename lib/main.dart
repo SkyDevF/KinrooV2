@@ -9,9 +9,7 @@ void main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   // ❗ ล็อกให้ใช้แนวตั้งอย่างเดียว
-  SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-  ]);
+  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
   runApp(KinrooApp());
 }
@@ -20,24 +18,34 @@ class KinrooApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
-      future: Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform),
+      future: Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      ),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return MaterialApp(
             home: Scaffold(
-              body: Center(child: CircularProgressIndicator()), // ✅ แสดงโหลดข้อมูลใน main()
+              body: Center(
+                child: CircularProgressIndicator(),
+              ), // ✅ แสดงโหลดข้อมูลใน main()
             ),
           );
         }
         if (snapshot.hasError) {
           return MaterialApp(
-            home: Scaffold(body: Center(child: Text("เกิดข้อผิดพลาดในการโหลด Firebase"))),
+            home: Scaffold(
+              body: Center(child: Text("เกิดข้อผิดพลาดในการโหลด Firebase")),
+            ),
           );
         }
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           title: 'Kinroo',
-          theme: ThemeData(primarySwatch: Colors.blue, useMaterial3: true),
+          theme: ThemeData(
+            fontFamily: 'Kanit',
+            useMaterial3: true,
+            primarySwatch: Colors.blue,
+          ),
           home: IntroScreen(), // ✅ ไปยังหน้าเริ่มต้นเมื่อโหลด Firebase สำเร็จ
         );
       },

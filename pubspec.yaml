@@ -10,7 +10,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  
+
+ 
+
   # 📌 ไอคอนและ UI
   cupertino_icons: ^1.0.8
   
@@ -78,4 +80,12 @@ flutter:
     - assets/icon/sum.png
     - assets/videos/intro.mp4
     - assets/models/kinrooV5.tflite
+  fonts:
+      - family: Kanit
+        fonts:
+          - asset: assets/fonts/Kanit-Regular.ttf
+          - asset: assets/fonts/Kanit-Bold.ttf
+            weight: 700
+          - asset: assets/fonts/Kanit-Italic.ttf
+            style: italic
     
