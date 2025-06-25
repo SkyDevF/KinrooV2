@@ -290,53 +290,53 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildWeightGoal() {
-    double? progressValue = 0;
-    if (startWeight != 0 && targetWeight != 0 && weight != 0) {
-      double totalDiff = (targetWeight - startWeight).abs();
-      double currentDiff = (weight - targetWeight).abs();
-      progressValue =
-          (totalDiff == 0 ? 1 : (1 - (currentDiff / totalDiff))).clamp(0, 1)
-              as double?;
-    }
-    int percentage = (progressValue! * 100).round();
-
-    return _buildContainer(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "เป้าหมายน้ำหนัก",
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          SizedBox(height: 10),
-          Text(
-            "ปัจจุบัน: ${weight.toStringAsFixed(1)} kg",
-            style: TextStyle(fontSize: 14),
-          ),
-          Text(
-            "เป้าหมาย: ${targetWeight.toStringAsFixed(1)} kg",
-            style: TextStyle(fontSize: 14),
-          ),
-          SizedBox(height: 15),
-          _buildProgressBar(
-            progressValue,
-            color: percentage >= 100
-                ? Colors.green
-                : Color.fromARGB(255, 47, 130, 174),
-          ),
-          SizedBox(height: 10),
-          Text(
-            "$percentage% สำเร็จ",
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              color: percentage >= 100 ? Colors.green : Colors.black,
-            ),
-          ),
-        ],
-      ),
-    );
+  double? progressValue = 0;
+  if (startWeight != 0 && targetWeight != 0 && weight != 0) {
+    double totalDiff = (targetWeight - startWeight).abs().toDouble();
+    double currentDiff = (weight - targetWeight).abs().toDouble();
+    progressValue =
+        (totalDiff == 0 ? 1.0 : (1.0 - (currentDiff / totalDiff))).clamp(0.0, 1.0);
   }
+  int percentage = (progressValue * 100).round();
+
+  return _buildContainer(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "เป้าหมายน้ำหนัก",
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+        SizedBox(height: 10),
+        Text(
+          "ปัจจุบัน: ${weight.toStringAsFixed(1)} kg",
+          style: TextStyle(fontSize: 14),
+        ),
+        Text(
+          "เป้าหมาย: ${targetWeight.toStringAsFixed(1)} kg",
+          style: TextStyle(fontSize: 14),
+        ),
+        SizedBox(height: 15),
+        _buildProgressBar(
+          progressValue,
+          color: percentage >= 100
+              ? Colors.green
+              : Color.fromARGB(255, 47, 130, 174),
+        ),
+        SizedBox(height: 10),
+        Text(
+          "$percentage% สำเร็จ",
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: percentage >= 100 ? Colors.green : Colors.black,
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
 
   Widget _buildFoodRecommendation() {
     final foodMenu = [

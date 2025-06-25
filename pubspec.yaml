@@ -20,6 +20,9 @@ dependencies:
   firebase_core: ^3.13.1
   firebase_auth: ^5.5.4
   cloud_firestore: ^5.6.8
+  google_sign_in: ^6.1.6
+ 
+
   
   # 📌 ตัวช่วยจัดการข้อมูลและรูปภาพ
   provider: ^6.1.5
@@ -78,6 +81,7 @@ flutter:
     - assets/icon/welcome.png
     - assets/icon/logo.png
     - assets/icon/sum.png
+    - assets/icon/google_logo.png
     - assets/videos/intro.mp4
     - assets/models/kinrooV5.tflite
   fonts:
