@@ -1,15 +1,23 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     id("com.android.application")
-    // START: FlutterFire Configuration
-    id("com.google.gms.google-services")
-    // END: FlutterFire Configuration
+    id("com.google.gms.google-services") // FlutterFire
     id("kotlin-android")
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+// ✅ โหลด key.properties
+val keystoreProperties = Properties().apply {
+    val keystorePropertiesFile = rootProject.file("key.properties")
+    if (keystorePropertiesFile.exists()) {
+        load(FileInputStream(keystorePropertiesFile))
+    }
+}
+
 android {
-    namespace = "com.example.kinroo"
+    namespace = "com.kinroo.app"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = "27.0.12077973"
 
@@ -23,28 +31,35 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.kinroo"
+        applicationId = "com.kinroo.app"
         minSdk = 23
         targetSdk = flutter.targetSdkVersion
         versionCode = 1
         versionName = "1.0.0"
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = file(keystoreProperties["storeFile"] ?: "key.jks")
+            storePassword = keystoreProperties["storePassword"] as String
+            keyAlias = keystoreProperties["keyAlias"] as String
+            keyPassword = keystoreProperties["keyPassword"] as String
+        }
+    }
+
     buildTypes {
         getByName("release") {
-            signingConfig = signingConfigs.getByName("debug")
+            isMinifyEnabled = false
+            isShrinkResources = false
+            signingConfig = signingConfigs.getByName("release") // ✅ ใช้ signing จริง
         }
     }
 }
 
 dependencies {
-    // บังคับให้ใช้ TensorFlow Lite runtime เวอร์ชัน 2.12.0 (หรือเวอร์ชันล่าสุดที่รองรับ FULLY_CONNECTED version 12)
     implementation("org.tensorflow:tensorflow-lite:2.12.0")
-    // รวม Flex Ops (Select TF Ops) เวอร์ชัน 2.12.0 ซึ่งช่วยให้ interpreter รองรับ op ที่ใหม่ขึ้น
     implementation("org.tensorflow:tensorflow-lite-select-tf-ops:2.12.0")
-    // (ถ้าต้องการลอง GPU delegate เพิ่มได้ แต่ในที่นี้เราพยายามแก้ให้ใช้ CPU)
-    // implementation("org.tensorflow:tensorflow-lite-gpu:2.12.0")
-    // Dependency อื่นๆ หากมี
+    // implementation("org.tensorflow:tensorflow-lite-gpu:2.12.0") // ถ้าต้องการ
 }
 
 flutter {

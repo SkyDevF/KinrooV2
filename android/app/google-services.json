@@ -48,6 +48,50 @@
           ]
         }
       }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:620249493204:android:65a9cf3b97e8b661249541",
+        "android_client_info": {
+          "package_name": "com.kinroo.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "620249493204-p3kg8lu8npibbaj6d1g576sshogvthuf.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.kinroo.app",
+            "certificate_hash": "fb1f10f32c4a5fb3e88f67934765a6ef73ba650d"
+          }
+        },
+        {
+          "client_id": "620249493204-ql9vgs17um93p2m701s2defdt14dfkl7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAA7Lxfwn60mjm9o5pC3ZyS1bFguSGtVcA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "620249493204-ql9vgs17um93p2m701s2defdt14dfkl7.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "620249493204-es7gbhhmckimqhcqka8uta67du5pm3qg.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.kinroo"
+              }
+            }
+          ]
+        }
+      }
     }
   ],
   "configuration_version": "1"

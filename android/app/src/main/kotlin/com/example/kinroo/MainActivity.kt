@@ -1,4 +1,4 @@
-package com.example.kinroo
+package com.kinroo.app
 
 import io.flutter.embedding.android.FlutterActivity
 
