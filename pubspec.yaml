@@ -84,6 +84,49 @@ flutter:
     - assets/icon/google_logo.png
     - assets/videos/intro.mp4
     - assets/models/kinrooV5.tflite
+    - assets/food/กระเพราเนื้อเปื่อย.jpg
+    - assets/food/กระเพราไก่.jpg
+    - assets/food/ข้าวผัดกุ้ง.jpg
+    - assets/food/ข้าวมันไก่.jpg
+    - assets/food/ข้าวหมูแดง.jpg
+    - assets/food/กระเพราหมูสับ.jpg
+    - assets/food/ก๋วยเตี๋ยว.jpg
+    - assets/food/แกงเขียวหวาน.jpg
+    - assets/food/แกงจืด.jpg
+    - assets/food/แกงหน่อไม้.jpg
+    - assets/food/ไก่ทอด.jpg
+    - assets/food/ส้มตำ.jpg
+    - assets/food/ไก่ย่าง.jpg
+    - assets/food/ขนมจีนน้ำยา.jpg
+    - assets/food/ข้าวต้มปลา.jpg
+    - assets/food/ข้าวต้มหมูสับ.jpg
+    - assets/food/ข้าวต้มกุ้ง.jpg
+    - assets/food/ข้าวขาหมู.jpg
+    - assets/food/ข้าวซอยไก่.jpg
+    - assets/food/ข้าวผัดกุ้ง.jpg
+    - assets/food/ข้าวผัดไข่.jpg
+    - assets/food/ข้าวหมูทอดกระเทียม.jpg
+    - assets/food/ข้าวเหนียวหมูปิ้ง.jpg
+    - assets/food/ไข่พะโล้.jpg
+    - assets/food/ชาบู.jpg
+    - assets/food/ต้มยำกุ้ง.jpg
+    - assets/food/ต้มไก่.jpg
+    - assets/food/ต้มเนื้อ.jpg
+    - assets/food/มาม่า.jpg
+    - assets/food/ซูชิ.jpg
+    - assets/food/ปลาทอด.jpg
+    - assets/food/ผัดกระเพราหมูกรอบ.jpg
+    - assets/food/ผัดไทย.jpg
+    - assets/food/ยำทะเล.jpg
+    - assets/food/ลาบหมู.jpg
+    - assets/food/ลูกชิ้นหมู.jpg
+    - assets/food/สปาเกตตี้ผัดขี้เมา.jpg
+    - assets/food/ส้มตำ.jpg
+    - assets/food/สลัดผัก.jpg
+    - assets/food/สุกี้น้ำ.jpg  
+    - assets/food/ไส้กรอกอีสาน.jpg
+    - assets/food/หมูกระทะ.jpg
+    - assets/food/หอยทอด.jpg
   fonts:
       - family: Kanit
         fonts:

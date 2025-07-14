@@ -27,7 +27,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (user == null) return;
 
     await user.reload(); // ✅ รีเฟรชข้อมูลบัญชี
-    DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+    DocumentSnapshot userDoc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .get();
 
     if (userDoc.exists) {
       setState(() {
@@ -35,7 +38,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         email = user.email ?? "ไม่มีอีเมล";
         weight = double.tryParse(userDoc.get('weight').toString()) ?? 0.0;
         height = double.tryParse(userDoc.get('height').toString()) ?? 0.0;
-        targetWeight = double.tryParse(userDoc.get('targetWeight').toString()) ?? 0.0;
+        targetWeight =
+            double.tryParse(userDoc.get('targetWeight').toString()) ?? 0.0;
       });
     }
   }
@@ -47,17 +51,49 @@ class _ProfileScreenState extends State<ProfileScreen> {
       appBar: AppBar(
         backgroundColor: Color.fromARGB(255, 70, 51, 43),
         centerTitle: true,
-        title: Image.asset('assets/icon/logo.png', width: 150, height: 100), // ✅ ใส่รูปตรงกลางแถบด้านบน
+        leading: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: Colors.grey),
+            ),
+            child: IconButton(
+              icon: Icon(
+                Icons.arrow_back,
+                color: Color.fromARGB(255, 70, 51, 43),
+              ),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ),
+        ),
+        title: Image.asset('assets/icon/logo.png', width: 150, height: 100),
       ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.asset('assets/icon/sum.png', width: 200, height: 200, fit: BoxFit.cover), // ✅ ใส่รูปตรงกลาง
+            Image.asset(
+              'assets/icon/sum.png',
+              width: 200,
+              height: 200,
+              fit: BoxFit.cover,
+            ), // ✅ ใส่รูปตรงกลาง
             SizedBox(height: 20),
 
-            Text(username, style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.brown[800])),
-            Text(email, style: TextStyle(fontSize: 16, color: Colors.grey[700])), // ✅ เพิ่มอีเมลใต้ชื่อ
+            Text(
+              username,
+              style: TextStyle(
+                fontSize: 26,
+                fontWeight: FontWeight.bold,
+                color: Colors.brown[800],
+              ),
+            ),
+            Text(
+              email,
+              style: TextStyle(fontSize: 16, color: Colors.grey[700]),
+            ), // ✅ เพิ่มอีเมลใต้ชื่อ
             SizedBox(height: 30),
 
             Container(
@@ -70,18 +106,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               child: Column(
                 children: [
-                  Text("น้ำหนัก: ${weight.toStringAsFixed(1)} กก.", style: TextStyle(fontSize: 18)),
-                  Text("ส่วนสูง: ${height.toStringAsFixed(1)} ซม.", style: TextStyle(fontSize: 18)),
-                  Text("เป้าหมายน้ำหนัก: ${targetWeight.toStringAsFixed(1)} กก.", style: TextStyle(fontSize: 18)),
+                  Text(
+                    "น้ำหนัก: ${weight.toStringAsFixed(1)} กก.",
+                    style: TextStyle(fontSize: 18),
+                  ),
+                  Text(
+                    "ส่วนสูง: ${height.toStringAsFixed(1)} ซม.",
+                    style: TextStyle(fontSize: 18),
+                  ),
+                  Text(
+                    "เป้าหมายน้ำหนัก: ${targetWeight.toStringAsFixed(1)} กก.",
+                    style: TextStyle(fontSize: 18),
+                  ),
                 ],
               ),
             ),
             SizedBox(height: 40),
 
             ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Color.fromARGB(255, 70, 51, 43)),
-              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => UpdateWeightScreen())),
-              child: Text("อัปเดตน้ำหนัก", style: TextStyle(color: Colors.white, fontSize: 18)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color.fromARGB(255, 70, 51, 43),
+              ),
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => UpdateWeightScreen()),
+              ),
+              child: Text(
+                "อัปเดตน้ำหนัก",
+                style: TextStyle(color: Colors.white, fontSize: 18),
+              ),
             ),
             SizedBox(height: 40),
 
@@ -89,9 +142,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
               style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
               onPressed: () async {
                 await FirebaseAuth.instance.signOut(); // ✅ ออกจากระบบ
-                Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => WelcomeScreen()));
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (_) => WelcomeScreen()),
+                );
               },
-              child: Text("ล็อกเอาท์", style: TextStyle(color: Color.fromARGB(255, 70, 51, 43), fontSize: 18, fontWeight: FontWeight.bold)),
+              child: Text(
+                "ล็อกเอาท์",
+                style: TextStyle(
+                  color: Color.fromARGB(255, 70, 51, 43),
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ],
         ),
