@@ -14,11 +14,11 @@
       },
       "oauth_client": [
         {
-          "client_id": "620249493204-hdlntdbsp8d9c9g4738ssjvmd5ukgiv9.apps.googleusercontent.com",
+          "client_id": "620249493204-l15up650mm1sgblsp1govhb93jotdtll.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.example.kinroo",
-            "certificate_hash": "fb1f10f32c4a5fb3e88f67934765a6ef73ba650d"
+            "certificate_hash": "70efb7558534701bc81cf77aced94bd8eb6bd508"
           }
         },
         {
@@ -58,11 +58,11 @@
       },
       "oauth_client": [
         {
-          "client_id": "620249493204-p3kg8lu8npibbaj6d1g576sshogvthuf.apps.googleusercontent.com",
+          "client_id": "620249493204-70365l3p950kro64detl4k2d3o01i8oo.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.kinroo.app",
-            "certificate_hash": "fb1f10f32c4a5fb3e88f67934765a6ef73ba650d"
+            "certificate_hash": "70efb7558534701bc81cf77aced94bd8eb6bd508"
           }
         },
         {
