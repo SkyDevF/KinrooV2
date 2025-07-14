@@ -6,6 +6,7 @@ import 'food_history_screen.dart';
 import 'scan_food_screen.dart';
 import 'package:crystal_navigation_bar/crystal_navigation_bar.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // ต้องเพิ่ม
+import 'update_weight_screen.dart'; // นำเข้า UpdateWeightScreen
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -289,47 +290,80 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildWeightGoal() {
+ Widget _buildWeightGoal() {
   double? progressValue = 0;
   if (startWeight != 0 && targetWeight != 0 && weight != 0) {
     double totalDiff = (targetWeight - startWeight).abs().toDouble();
     double currentDiff = (weight - targetWeight).abs().toDouble();
     progressValue =
-        (totalDiff == 0 ? 1.0 : (1.0 - (currentDiff / totalDiff))).clamp(0.0, 1.0);
+        (totalDiff == 0 ? 1.0 : (1.0 - (currentDiff / totalDiff)))
+            .clamp(0.0, 1.0);
   }
   int percentage = (progressValue * 100).round();
 
   return _buildContainer(
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    child: Stack(
       children: [
-        Text(
-          "เป้าหมายน้ำหนัก",
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        // กล่องเนื้อหาเป้าหมายน้ำหนัก
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "เป้าหมายน้ำหนัก",
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 10),
+            Text(
+              "ปัจจุบัน: ${weight.toStringAsFixed(1)} kg",
+              style: TextStyle(fontSize: 14),
+            ),
+            Text(
+              "เป้าหมาย: ${targetWeight.toStringAsFixed(1)} kg",
+              style: TextStyle(fontSize: 14),
+            ),
+            SizedBox(height: 15),
+            _buildProgressBar(
+              progressValue,
+              color: percentage >= 100
+                  ? Colors.green
+                  : Color.fromARGB(255, 70, 51, 43),
+            ),
+            SizedBox(height: 10),
+            Text(
+              "$percentage% สำเร็จ",
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: percentage >= 100 ? Colors.green : Colors.black,
+              ),
+            ),
+          ],
         ),
-        SizedBox(height: 10),
-        Text(
-          "ปัจจุบัน: ${weight.toStringAsFixed(1)} kg",
-          style: TextStyle(fontSize: 14),
-        ),
-        Text(
-          "เป้าหมาย: ${targetWeight.toStringAsFixed(1)} kg",
-          style: TextStyle(fontSize: 14),
-        ),
-        SizedBox(height: 15),
-        _buildProgressBar(
-          progressValue,
-          color: percentage >= 100
-              ? Colors.green
-              : Color.fromARGB(255, 47, 130, 174),
-        ),
-        SizedBox(height: 10),
-        Text(
-          "$percentage% สำเร็จ",
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-            color: percentage >= 100 ? Colors.green : Colors.black,
+
+        // ปุ่มอัปเดตน้ำหนัก (มุมขวาบน)
+        Positioned(
+          top: 0,
+          right: 0,
+          child: TextButton(
+            style: TextButton.styleFrom(
+              backgroundColor: Color.fromARGB(255, 70, 51, 43), // สี brown
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(6),
+              ),
+              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            ),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => UpdateWeightScreen(),
+                ),
+              );
+            },
+            child: Text(
+              "อัปเดต",
+              style: TextStyle(color: Colors.white, fontSize: 12),
+            ),
           ),
         ),
       ],
@@ -338,415 +372,431 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 
-Widget _buildFoodRecommendation() {
-  final foodMenu = [
-  {
-    "name": "ข้าวขาหมู",
-    "image": "assets/food/ข้าวขาหมู.jpg",
-    "calories": 550,
-    "type": "gain",
-    "allergy": []
-  },
-  {
-    "name": "ข้าวมันไก่",
-    "image": "assets/food/ข้าวมันไก่.jpg",
-    "calories": 600,
-    "type": "gain",
-    "allergy": []
-  },
-  {
-    "name": "ข้าวซอยไก่",
-    "image": "assets/food/ข้าวซอยไก่.jpg",
-    "calories": 500,
-    "type": "gain",
-    "allergy": ["นม"]
-  },
-  {
-    "name": "หมูกระทะ",
-    "image": "assets/food/หมูกระทะ.jpg",
-    "calories": 600,
-    "type": "gain",
-    "allergy": []
-  },
-  {
-    "name": "ไก่ทอด",
-    "image": "assets/food/ไก่ทอด.jpg",
-    "calories": 600,
-    "type": "gain",
-    "allergy": []
-  },
-  {
-    "name": "ผัดไทย",
-    "image": "assets/food/ผัดไทย.jpg",
-    "calories": 550,
-    "type": "gain",
-    "allergy": ["ไข่"]
-  },
-  {
-    "name": "หอยทอด",
-    "image": "assets/food/หอยทอด.jpg",
-    "calories": 550,
-    "type": "gain",
-    "allergy": ["ไข่"]
-  },
-  {
-    "name": "ข้าวหมูทอดกระเทียม",
-    "image": "assets/food/ข้าวหมูทอดกระเทียม.jpg",
-    "calories": 550,
-    "type": "gain",
-    "allergy": []
-  },
-  {
-    "name": "สปาเกตตีผัดขี้เมา",
-    "image": "assets/food/สปาเกตตีผัดขี้เมา.jpg",
-    "calories": 550,
-    "type": "gain",
-    "allergy": ["ไข่"]
-  },
-  {
-    "name": "ข้าวหมูแดง",
-    "image": "assets/food/ข้าวหมูแดง.jpg",
-    "calories": 500,
-    "type": "gain",
-    "allergy": []
-  },
-  {
-    "name": "ผัดกะเพราหมูกรอบ",
-    "image": "assets/food/ผัดกะเพราหมูกรอบ.jpg",
-    "calories": 500,
-    "type": "gain",
-    "allergy": []
-  },
-  {
-    "name": "ไส้กรอกอีสาน",
-    "image": "assets/food/ไส้กรอกอีสาน.jpg",
-    "calories": 500,
-    "type": "gain",
-    "allergy": []
-  },
-  {
-    "name": "ข้าวเหนียวหมูปิ้ง",
-    "image": "assets/food/ข้าวเหนียวหมูปิ้ง.jpg",
-    "calories": 450,
-    "type": "balanced",
-    "allergy": []
-  },
-  {
-    "name": "ข้าวผัดกุ้ง",
-    "image": "assets/food/ข้าวผัดกุ้ง.jpg",
-    "calories": 450,
-    "type": "balanced",
-    "allergy": ["กุ้ง", "ไข่"]
-  },
-  {
-    "name": "แกงเขียวหวาน",
-    "image": "assets/food/แกงเขียวหวาน.jpg",
-    "calories": 450,
-    "type": "balanced",
-    "allergy": ["นม"]
-  },
-  {
-    "name": "บะหมี่กึ่งสำเร็จรูป",
-    "image": "assets/food/บะหมี่กึ่งสำเร็จรูป.jpg",
-    "calories": 450,
-    "type": "balanced",
-    "allergy": ["ไข่"]
-  },
-  {
-    "name": "ไก่ย่าง",
-    "image": "assets/food/ไก่ย่าง.jpg",
-    "calories": 450,
-    "type": "balanced",
-    "allergy": []
-  },
-  {
-    "name": "ข้าวไข่เจียว",
-    "image": "assets/food/ข้าวไข่เจียว.jpg",
-    "calories": 420,
-    "type": "balanced",
-    "allergy": ["ไข่"]
-  },
-  {
-    "name": "ลาบหมู",
-    "image": "assets/food/ลาบหมู.jpg",
-    "calories": 420,
-    "type": "balanced",
-    "allergy": []
-  },
-  {
-    "name": "ข้าวผัดไข่",
-    "image": "assets/food/ข้าวผัดไข่.jpg",
-    "calories": 400,
-    "type": "balanced",
-    "allergy": ["ไข่"]
-  },
-  {
-    "name": "ต้มเนื้อ",
-    "image": "assets/food/ต้มเนื้อ.jpg",
-    "calories": 400,
-    "type": "balanced",
-    "allergy": []
-  },
-  {
-    "name": "ขนมจีนน้ำยา",
-    "image": "assets/food/ขนมจีนน้ำยา.jpg",
-    "calories": 400,
-    "type": "balanced",
-    "allergy": ["ปลา"]
-  },
-  {
-    "name": "ปลาทอด",
-    "image": "assets/food/ปลาทอด.jpg",
-    "calories": 400,
-    "type": "balanced",
-    "allergy": ["ปลา"]
-  },
-  {
-    "name": "สุกี้น้ำ",
-    "image": "assets/food/สุกี้น้ำ.jpg",
-    "calories": 400,
-    "type": "balanced",
-    "allergy": ["ไข่"]
-  },
-  {
-    "name": "ลูกชิ้นหมู",
-    "image": "assets/food/ลูกชิ้นหมู.jpg",
-    "calories": 380,
-    "type": "balanced",
-    "allergy": []
-  },
-  {
-    "name": "ต้มยำกุ้ง",
-    "image": "assets/food/ต้มยำกุ้ง.jpg",
-    "calories": 360,
-    "type": "control",
-    "allergy": ["กุ้ง"]
-  },
-  {
-    "name": "ต้มไก่",
-    "image": "assets/food/ต้มไก่.jpg",
-    "calories": 350,
-    "type": "control",
-    "allergy": []
-  },
-  {
-    "name": "ชาบู",
-    "image": "assets/food/ชาบู.jpg",
-    "calories": 350,
-    "type": "control",
-    "allergy": []
-  },
-  {
-    "name": "ยำทะเล",
-    "image": "assets/food/ยำทะเล.jpg",
-    "calories": 350,
-    "type": "control",
-    "allergy": ["กุ้ง", "ปลา"]
-  },
-  {
-    "name": "แกงหน่อไม้",
-    "image": "assets/food/แกงหน่อไม้.jpg",
-    "calories": 350,
-    "type": "control",
-    "allergy": []
-  },
-  {
-    "name": "ไข่พะโล้",
-    "image": "assets/food/ไข่พะโล้.jpg",
-    "calories": 350,
-    "type": "control",
-    "allergy": ["ไข่"]
-  },
-  {
-    "name": "ข้าวต้มหมูสับ",
-    "image": "assets/food/ข้าวต้มหมูสับ.jpg",
-    "calories": 340,
-    "type": "control",
-    "allergy": []
-  },
-  {
-    "name": "กระเพราเนื้อเปื่อย",
-    "image": "assets/food/กระเพราเนื้อเปื่อย.jpg",
-    "calories": 320,
-    "type": "control",
-    "allergy": []
-  },
-  {
-    "name": "ข้าวต้มกุ้ง",
-    "image": "assets/food/ข้าวต้มกุ้ง.jpg",
-    "calories": 320,
-    "type": "control",
-    "allergy": ["กุ้ง"]
-  },
-  {
-    "name": "ผัดผักรวมมิตร",
-    "image": "assets/food/ผัดผักรวมมิตร.jpg",
-    "calories": 300,
-    "type": "control",
-    "allergy": []
-  },
-  {
-    "name": "กระเพราหมูสับ",
-    "image": "assets/food/กระเพราหมูสับ.jpg",
-    "calories": 300,
-    "type": "control",
-    "allergy": []
-  },
-  {
-    "name": "ข้าวต้มปลา",
-    "image": "assets/food/ข้าวต้มปลา.jpg",
-    "calories": 300,
-    "type": "control",
-    "allergy": ["ปลา"]
-  },
-  {
-    "name": "ซูชิ",
-    "image": "assets/food/ซูชิ.jpg",
-    "calories": 280,
-    "type": "control",
-    "allergy": ["ปลา"]
-  },
-  {
-    "name": "กระเพราไก่",
-    "image": "assets/food/กระเพราไก่.jpg",
-    "calories": 280,
-    "type": "control",
-    "allergy": []
-  },
-  {
-    "name": "สลัดผัก",
-    "image": "assets/food/สลัดผัก.jpg",
-    "calories": 250,
-    "type": "control",
-    "allergy": []
-  },
-  {
-    "name": "ก๋วยเตี๋ยว",
-    "image": "assets/food/ก๋วยเตี๋ยว.jpg",
-    "calories": 250,
-    "type": "control",
-    "allergy": []
-  },
-  {
-    "name": "แกงจืด",
-    "image": "assets/food/แกงจืด.jpg",
-    "calories": 250,
-    "type": "control",
-    "allergy": []
-  },
-  {
-    "name": "ส้มตำ",
-    "image": "assets/food/ส้มตำ.jpg",
-    "calories": 200,
-    "type": "control",
-    "allergy": []
-  },
-];
+  Widget _buildFoodRecommendation() {
+    final foodMenu = [
+      {
+        "name": "ข้าวขาหมู",
+        "image": "assets/food/ข้าวขาหมู.jpg",
+        "calories": 550,
+        "type": "gain",
+        "allergy": [],
+      },
+      {
+        "name": "ข้าวมันไก่",
+        "image": "assets/food/ข้าวมันไก่.jpg",
+        "calories": 600,
+        "type": "gain",
+        "allergy": [],
+      },
+      {
+        "name": "ข้าวซอยไก่",
+        "image": "assets/food/ข้าวซอยไก่.jpg",
+        "calories": 500,
+        "type": "gain",
+        "allergy": ["นม"],
+      },
+      {
+        "name": "หมูกระทะ",
+        "image": "assets/food/หมูกระทะ.jpg",
+        "calories": 600,
+        "type": "gain",
+        "allergy": [],
+      },
+      {
+        "name": "ไก่ทอด",
+        "image": "assets/food/ไก่ทอด.jpg",
+        "calories": 600,
+        "type": "gain",
+        "allergy": [],
+      },
+      {
+        "name": "ผัดไทย",
+        "image": "assets/food/ผัดไทย.jpg",
+        "calories": 550,
+        "type": "gain",
+        "allergy": ["ไข่"],
+      },
+      {
+        "name": "หอยทอด",
+        "image": "assets/food/หอยทอด.jpg",
+        "calories": 550,
+        "type": "gain",
+        "allergy": ["ไข่"],
+      },
+      {
+        "name": "ข้าวหมูทอดกระเทียม",
+        "image": "assets/food/ข้าวหมูทอดกระเทียม.jpg",
+        "calories": 550,
+        "type": "gain",
+        "allergy": [],
+      },
+      {
+        "name": "สปาเกตตีผัดขี้เมา",
+        "image": "assets/food/สปาเกตตี้ผัดขี้เมา.jpg",
+        "calories": 550,
+        "type": "gain",
+        "allergy": ["ไข่"],
+      },
+      {
+        "name": "ข้าวหมูแดง",
+        "image": "assets/food/ข้าวหมูแดง.jpg",
+        "calories": 500,
+        "type": "gain",
+        "allergy": [],
+      },
+      {
+        "name": "ผัดกะเพราหมูกรอบ",
+        "image": "assets/food/กะเพราหมูกรอบ.jpg",
+        "calories": 500,
+        "type": "gain",
+        "allergy": ["ไข่"],
+      },
+      {
+        "name": "ไส้กรอกอีสาน",
+        "image": "assets/food/ไส้กรอกอีสาน.jpg",
+        "calories": 500,
+        "type": "gain",
+        "allergy": [],
+      },
+      {
+        "name": "ข้าวเหนียวหมูปิ้ง",
+        "image": "assets/food/ข้าวเหนียวหมูปิ้ง.jpg",
+        "calories": 450,
+        "type": "balanced",
+        "allergy": [],
+      },
+      {
+        "name": "ข้าวผัดกุ้ง",
+        "image": "assets/food/ข้าวผัดกุ้ง.jpg",
+        "calories": 450,
+        "type": "balanced",
+        "allergy": ["กุ้ง", "ไข่"],
+      },
+      {
+        "name": "แกงเขียวหวาน",
+        "image": "assets/food/แกงเขียวหวาน.jpg",
+        "calories": 450,
+        "type": "balanced",
+        "allergy": ["นม"],
+      },
+      {
+        "name": "บะหมี่กึ่งสำเร็จรูป",
+        "image": "assets/food/มาม่า.jpg",
+        "calories": 450,
+        "type": "balanced",
+        "allergy": ["ไข่"],
+      },
+      {
+        "name": "ไก่ย่าง",
+        "image": "assets/food/ไก่ย่าง.jpg",
+        "calories": 450,
+        "type": "balanced",
+        "allergy": [],
+      },
+      {
+        "name": "ข้าวไข่เจียว",
+        "image": "assets/food/ข้าวไข่เจียว.jpg",
+        "calories": 420,
+        "type": "balanced",
+        "allergy": ["ไข่"],
+      },
+      {
+        "name": "ลาบหมู",
+        "image": "assets/food/ลาบหมู.jpg",
+        "calories": 420,
+        "type": "balanced",
+        "allergy": [],
+      },
+      {
+        "name": "ข้าวผัดไข่",
+        "image": "assets/food/ข้าวผัดไข่.jpg",
+        "calories": 400,
+        "type": "balanced",
+        "allergy": ["ไข่"],
+      },
+      {
+        "name": "ต้มเนื้อ",
+        "image": "assets/food/ต้มเนื้อ.jpg",
+        "calories": 400,
+        "type": "balanced",
+        "allergy": [],
+      },
+      {
+        "name": "ขนมจีนน้ำยา",
+        "image": "assets/food/ขนมจีนน้ำยา.jpg",
+        "calories": 400,
+        "type": "balanced",
+        "allergy": ["ปลา"],
+      },
+      {
+        "name": "ปลาทอด",
+        "image": "assets/food/ปลาทอด.jpg",
+        "calories": 400,
+        "type": "balanced",
+        "allergy": ["ปลา"],
+      },
+      {
+        "name": "สุกี้น้ำ",
+        "image": "assets/food/สุกี้น้ำ.jpg",
+        "calories": 400,
+        "type": "balanced",
+        "allergy": ["ไข่"],
+      },
+      {
+        "name": "ลูกชิ้นหมู",
+        "image": "assets/food/ลูกชิ้นหมู.jpg",
+        "calories": 380,
+        "type": "balanced",
+        "allergy": [],
+      },
+      {
+        "name": "ต้มยำกุ้ง",
+        "image": "assets/food/ต้มยำกุ้ง.jpg",
+        "calories": 360,
+        "type": "control",
+        "allergy": ["กุ้ง"],
+      },
+      {
+        "name": "ต้มไก่",
+        "image": "assets/food/ต้มไก่.jpg",
+        "calories": 350,
+        "type": "control",
+        "allergy": [],
+      },
+      {
+        "name": "ชาบู",
+        "image": "assets/food/ชาบู.jpg",
+        "calories": 350,
+        "type": "control",
+        "allergy": [],
+      },
+      {
+        "name": "ยำทะเล",
+        "image": "assets/food/ยำทะเล.jpg",
+        "calories": 350,
+        "type": "control",
+        "allergy": ["กุ้ง", "ปลา"],
+      },
+      {
+        "name": "แกงหน่อไม้",
+        "image": "assets/food/แกงหน่อไม้.jpg",
+        "calories": 350,
+        "type": "control",
+        "allergy": [],
+      },
+      {
+        "name": "ไข่พะโล้",
+        "image": "assets/food/ไข่พะโล้.jpg",
+        "calories": 350,
+        "type": "control",
+        "allergy": ["ไข่"],
+      },
+      {
+        "name": "ข้าวต้มหมูสับ",
+        "image": "assets/food/ข้าวต้มหมูสับ.jpg",
+        "calories": 340,
+        "type": "control",
+        "allergy": [],
+      },
+      {
+        "name": "กระเพราเนื้อเปื่อย",
+        "image": "assets/food/กระเพราเนื้อเปื่อย.jpg",
+        "calories": 320,
+        "type": "control",
+        "allergy": ["ไข่"],
+      },
+      {
+        "name": "ข้าวต้มกุ้ง",
+        "image": "assets/food/ข้าวต้มกุ้ง.jpg",
+        "calories": 320,
+        "type": "control",
+        "allergy": ["กุ้ง"],
+      },
+      {
+        "name": "ผัดผักรวมมิตร",
+        "image": "assets/food/ผัดผักรวมมิตร.jpg",
+        "calories": 300,
+        "type": "control",
+        "allergy": [],
+      },
+      {
+        "name": "กระเพราหมูสับ",
+        "image": "assets/food/กระเพราหมูสับ.jpg",
+        "calories": 300,
+        "type": "control",
+        "allergy": ["ไข่"],
+      },
+      {
+        "name": "ข้าวต้มปลา",
+        "image": "assets/food/ข้าวต้มปลา.jpg",
+        "calories": 300,
+        "type": "control",
+        "allergy": ["ปลา"],
+      },
+      {
+        "name": "ซูชิ",
+        "image": "assets/food/ซูชิ.jpg",
+        "calories": 280,
+        "type": "control",
+        "allergy": ["ปลา"],
+      },
+      {
+        "name": "กระเพราไก่",
+        "image": "assets/food/กระเพราไก่.jpg",
+        "calories": 280,
+        "type": "control",
+        "allergy": ["ไข่"],
+      },
+      {
+        "name": "สลัดผัก",
+        "image": "assets/food/สลัดผัก.jpg",
+        "calories": 250,
+        "type": "control",
+        "allergy": [],
+      },
+      {
+        "name": "ก๋วยเตี๋ยว",
+        "image": "assets/food/ก๋วยเตี๋ยว.jpg",
+        "calories": 250,
+        "type": "control",
+        "allergy": [],
+      },
+      {
+        "name": "แกงจืด",
+        "image": "assets/food/แกงจืด.jpg",
+        "calories": 250,
+        "type": "control",
+        "allergy": [],
+      },
+      {
+        "name": "ส้มตำ",
+        "image": "assets/food/ส้มตำ.jpg",
+        "calories": 200,
+        "type": "control",
+        "allergy": [],
+      },
+    ];
 
+    // คำนวณ BMI
+    double bmi = (weight == 0 || height == 0)
+        ? 0.0
+        : weight / ((height / 100) * (height / 100));
 
- // คำนวณ BMI
-  double bmi = (weight == 0 || height == 0)
-      ? 0.0
-      : weight / ((height / 100) * (height / 100));
+    // เลือกประเภทเมนูตาม BMI
+    String category;
+    if (bmi < 18.5) {
+      category = "gain";
+    } else if (bmi < 25) {
+      category = "balanced";
+    } else {
+      category = "control";
+    }
 
-  // เลือกประเภทเมนูตาม BMI
-  String category;
-  if (bmi < 18.5) {
-    category = "gain";
-  } else if (bmi < 25) {
-    category = "balanced";
-  } else {
-    category = "control";
-  }
+    // ตัวอย่าง allergy (ดึงจาก Firebase ได้)
+    List<String> userAllergy = []; // เช่น ["ไข่", "นม"]
 
-  // ตัวอย่าง allergy (ดึงจาก Firebase ได้)
-  List<String> userAllergy = []; // เช่น ["ไข่", "นม"]
+    // กรองเมนูที่ตรงประเภทและไม่ใช่อาหารที่แพ้
+    final filteredMenu = foodMenu.where((menu) {
+      return menu["type"] == category &&
+          !(menu["allergy"] as List).any((a) => userAllergy.contains(a));
+    }).toList();
 
-  // กรองเมนูที่ตรงประเภทและไม่ใช่อาหารที่แพ้
-  final filteredMenu = foodMenu.where((menu) {
-    return menu["type"] == category &&
-        !(menu["allergy"] as List).any((a) => userAllergy.contains(a));
-  }).toList();
+    // สุ่มและจำกัด 3 รายการ
+    filteredMenu.shuffle();
+    final displayedMenus = filteredMenu.take(3).toList();
 
-  // สุ่มและจำกัด 3 รายการ
-  filteredMenu.shuffle();
-  final displayedMenus = filteredMenu.take(3).toList();
+    return _buildContainer(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "แนะนำเมนูอาหาร",
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+          SizedBox(height: 15),
+          Container(
+            height: 200,
+            child: displayedMenus.isEmpty
+                ? Center(child: Text("ไม่พบเมนูที่เหมาะสมกับสุขภาพของคุณ"))
+                : ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: displayedMenus.length,
+                    itemBuilder: (ctx, index) {
+                      final item = displayedMenus[index];
+                      final path = item["image"].toString();
 
-  return _buildContainer(
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text("แนะนำเมนูอาหาร", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-        SizedBox(height: 15),
-        Container(
-          height: 200,
-          child: displayedMenus.isEmpty
-              ? Center(child: Text("ไม่พบเมนูที่เหมาะสมกับสุขภาพของคุณ"))
-              : ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: displayedMenus.length,
-                  itemBuilder: (ctx, index) {
-                    final item = displayedMenus[index];
-                    final path = item["image"].toString();
-
-                    return Container(
-                      width: 150,
-                      margin: EdgeInsets.only(right: 15),
-                      child: Column(
-                        children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(15),
-                            child: path.startsWith("assets/")
-                                ? Image.asset(
-                                    path,
-                                    width: 150,
-                                    height: 130,
-                                    fit: BoxFit.cover,
-                                  )
-                                : Image.network(
-                                    path,
-                                    width: 150,
-                                    height: 130,
-                                    fit: BoxFit.cover,
-                                    loadingBuilder: (c, child, progress) {
-                                      if (progress == null) return child;
-                                      return Container(
-                                        width: 150,
-                                        height: 130,
-                                        child: Center(child: CircularProgressIndicator()),
-                                      );
-                                    },
-                                    errorBuilder: (_, __, ___) => Container(
+                      return Container(
+                        width: 150,
+                        margin: EdgeInsets.only(right: 15),
+                        child: Column(
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(15),
+                              child: path.startsWith("assets/")
+                                  ? Image.asset(
+                                      path,
                                       width: 150,
                                       height: 130,
-                                      decoration: BoxDecoration(
-                                        color: Colors.grey[300],
-                                        borderRadius: BorderRadius.circular(15),
+                                      fit: BoxFit.cover,
+                                    )
+                                  : Image.network(
+                                      path,
+                                      width: 150,
+                                      height: 130,
+                                      fit: BoxFit.cover,
+                                      loadingBuilder: (c, child, progress) {
+                                        if (progress == null) return child;
+                                        return Container(
+                                          width: 150,
+                                          height: 130,
+                                          child: Center(
+                                            child: CircularProgressIndicator(),
+                                          ),
+                                        );
+                                      },
+                                      errorBuilder: (_, __, ___) => Container(
+                                        width: 150,
+                                        height: 130,
+                                        decoration: BoxDecoration(
+                                          color: Colors.grey[300],
+                                          borderRadius: BorderRadius.circular(
+                                            15,
+                                          ),
+                                        ),
+                                        child: Icon(
+                                          Icons.image_not_supported,
+                                          size: 40,
+                                          color: Colors.grey,
+                                        ),
                                       ),
-                                      child: Icon(Icons.image_not_supported, size: 40, color: Colors.grey),
                                     ),
-                                  ),
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            item["name"].toString(),
-                            style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
-                            textAlign: TextAlign.center,
-                          ),
-                          Text(
-                            "${item["calories"]} kcal",
-                            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-        ),
-      ],
-    ),
-  );
-}
+                            ),
+                            SizedBox(height: 8),
+                            Text(
+                              item["name"].toString(),
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            Text(
+                              "${item["calories"]} kcal",
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _buildHeader() {
     return Container(

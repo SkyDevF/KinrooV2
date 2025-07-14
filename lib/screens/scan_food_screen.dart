@@ -14,7 +14,8 @@ class ScanFoodScreen extends StatefulWidget {
   _ScanFoodScreenState createState() => _ScanFoodScreenState();
 }
 
-class _ScanFoodScreenState extends State<ScanFoodScreen> with TickerProviderStateMixin {
+class _ScanFoodScreenState extends State<ScanFoodScreen>
+    with TickerProviderStateMixin {
   XFile? _image;
   Interpreter? _interpreter;
   TextEditingController _foodController = TextEditingController();
@@ -50,9 +51,7 @@ class _ScanFoodScreenState extends State<ScanFoodScreen> with TickerProviderStat
   }
 
   void _lockOrientation() {
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-    ]);
+    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   }
 
   void _unlockOrientation() {
@@ -155,7 +154,7 @@ class _ScanFoodScreenState extends State<ScanFoodScreen> with TickerProviderStat
       "ไก่ย่าง": [450, 30, 10, 55],
       "ไข่พะโล้": [350, 20, 10, 40],
       "ไม่มีอาหาร": [0, 0, 0, 0],
-      "ไส้กรอกอีสาน": [500, 28, 22, 40]
+      "ไส้กรอกอีสาน": [500, 28, 22, 40],
     };
 
     if (nutritionData.containsKey(food)) {
@@ -296,13 +295,7 @@ class _ScanFoodScreenState extends State<ScanFoodScreen> with TickerProviderStat
               color: primaryBrown,
             ),
           ),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey[600],
-            ),
-          ),
+          Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
         ],
       ),
     );
@@ -324,7 +317,9 @@ class _ScanFoodScreenState extends State<ScanFoodScreen> with TickerProviderStat
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         CircularProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation<Color>(primaryBlue),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            primaryBlue,
+                          ),
                           strokeWidth: 3,
                         ),
                         SizedBox(height: 20),
@@ -332,7 +327,8 @@ class _ScanFoodScreenState extends State<ScanFoodScreen> with TickerProviderStat
                           "กำลังโหลดโมเดล AI...",
                           style: TextStyle(
                             fontSize: 16,
-                            color: Colors.white, // Changed text color for contrast
+                            color:
+                                Colors.white, // Changed text color for contrast
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -340,8 +336,8 @@ class _ScanFoodScreenState extends State<ScanFoodScreen> with TickerProviderStat
                     ),
                   )
                 : _image == null
-                    ? _buildInitialView()
-                    : _buildResultView(),
+                ? _buildInitialView()
+                : _buildResultView(),
           ),
         ),
       ),
@@ -368,11 +364,7 @@ class _ScanFoodScreenState extends State<ScanFoodScreen> with TickerProviderStat
             ),
             child: Column(
               children: [
-                Icon(
-                  Icons.camera_alt_rounded,
-                  size: 60,
-                  color: Colors.white,
-                ),
+                Icon(Icons.camera_alt_rounded, size: 60, color: Colors.white),
                 SizedBox(height: 15),
                 Text(
                   "สแกนอาหาร",
@@ -408,13 +400,17 @@ class _ScanFoodScreenState extends State<ScanFoodScreen> with TickerProviderStat
           Align(
             alignment: Alignment.bottomLeft, // Align to bottom left
             child: SizedBox(
-              width: MediaQuery.of(context).size.width * 1.0, // Adjust width as needed
+              width:
+                  MediaQuery.of(context).size.width *
+                  1.0, // Adjust width as needed
               child: _buildGradientButton(
                 text: "เลือกจากแกลลอรี่",
                 icon: Icons.photo_library,
                 onPressed: () => _pickImage(ImageSource.gallery),
-                backgroundColor: primaryBlue, // Changed to primaryBlue for consistency as requested
-                alignment: Alignment.centerLeft, // Align content within the button
+                backgroundColor:
+                    primaryBlue, // Changed to primaryBlue for consistency as requested
+                alignment:
+                    Alignment.centerLeft, // Align content within the button
               ),
             ),
           ),
@@ -437,10 +433,46 @@ class _ScanFoodScreenState extends State<ScanFoodScreen> with TickerProviderStat
             ),
             child: Column(
               children: [
-                Icon(
-                  Icons.info_outline,
-                  color: primaryBlue,
-                  size: 30,
+                GestureDetector(
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        title: Text("เมนูที่รองรับ"),
+                        content: SingleChildScrollView(
+                          child: Text(
+                            "แอพพลิเคชั่นตอนนี้รองรับเมนูอาหาร 50 เมนู คือ\n\n"
+                            "1. กระเพราไก่\n2. กระเพราเนื้อเปื่อย\n3. กระเพราหมูสับ\n4. ก๋วยเตี๋ยว\n5. แกงเขียวหวาน\n"
+                            "6. แกงจืด\n7. แกงหน่อไม้\n8. ไก่ทอด\n9. ไก่ย่าง\n10. ขนมจีนน้ำยา\n"
+                            "11. ข้าวขาหมู\n12. ข้าวไข่เจียว\n13. ข้าวซอยไก่\n14. ข้าวต้มกุ้ง\n15. ข้าวต้มปลา\n"
+                            "16. ข้าวต้มหมูสับ\n17. ข้าวผัดกุ้ง\n18. ข้าวผัดไข่\n19. ข้าวมันไก่\n20. ข้าวหมูแดง\n"
+                            "21. ข้าวหมูทอดกระเทียม\n22. ข้าวเหนียวหมูปิ้ง\n23. ไข่พะโล้\n24. คอหมูย่าง\n25. คะน้าหมูกรอบ\n"
+                            "26. ชาบู\n27. ซูชิ\n28. ต้มไก่\n29. ต้มเนื้อ\n30. ต้มยำกุ้ง\n"
+                            "31. น้ำปั่นผลไม้\n32. น้ำอัดลม\n33. บะหมี่กึ่งสำเร็๋จรูป\n34. ปลาทอด\n35. ปลาหมึกผัดไข่เค็ม\n"
+                            "36. ผัดกระเพราหมูกรอบ\n37. ผัดซีอิ้วหมู\n38. ผัดไทย\n39. ผัดผักรวมมิตร\n40. ยำทะเล\n"
+                            "41. ลาบหมู\n42. ลูกชิ้นหมู\n43. สปาเก็ตตี้ผัดขี้เมา\n44. ส้มตำ\n45. สลัดผัก\n"
+                            "46. สุกี้น้ำ\n47. ไส้กรอกอีสาน\n48. หมูกระทะ\n49. หอยทอด\n50. ไม่มีอาหาร",
+                            style: TextStyle(fontSize: 14, height: 1.5),
+                          ),
+                        ),
+                        actions: [
+                          TextButton(
+                            child: Text("ปิด"),
+                            onPressed: () => Navigator.of(ctx).pop(),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                  child: CircleAvatar(
+                    backgroundColor: primaryBlue.withOpacity(0.1),
+                    radius: 24,
+                    child: Icon(
+                      Icons.info_outline,
+                      color: primaryBlue,
+                      size: 28,
+                    ),
+                  ),
                 ),
                 SizedBox(height: 10),
                 Text(
@@ -482,7 +514,10 @@ class _ScanFoodScreenState extends State<ScanFoodScreen> with TickerProviderStat
               margin: EdgeInsets.only(bottom: 20),
               child: IconButton(
                 onPressed: () => setState(() => _image = null),
-                icon: Icon(Icons.arrow_back_ios, color: primaryBlue), // Changed color to primaryBlue
+                icon: Icon(
+                  Icons.arrow_back_ios,
+                  color: primaryBlue,
+                ), // Changed color to primaryBlue
                 style: IconButton.styleFrom(
                   backgroundColor: Colors.white,
                   padding: EdgeInsets.all(12),
@@ -510,10 +545,7 @@ class _ScanFoodScreenState extends State<ScanFoodScreen> with TickerProviderStat
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(20),
-              child: Image.file(
-                File(_image!.path),
-                fit: BoxFit.cover,
-              ),
+              child: Image.file(File(_image!.path), fit: BoxFit.cover),
             ),
           ),
 
@@ -552,7 +584,9 @@ class _ScanFoodScreenState extends State<ScanFoodScreen> with TickerProviderStat
                     hintText: "แก้ไขชื่ออาหาร",
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: primaryBlue.withOpacity(0.3)),
+                      borderSide: BorderSide(
+                        color: primaryBlue.withOpacity(0.3),
+                      ),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -563,7 +597,9 @@ class _ScanFoodScreenState extends State<ScanFoodScreen> with TickerProviderStat
                     fillColor: Colors.grey[50],
                   ),
                   onChanged: (value) => setState(() {
-                    _getNutritionData(value); // Update nutrition data when food name changes
+                    _getNutritionData(
+                      value,
+                    ); // Update nutrition data when food name changes
                   }),
                 ),
               ],
@@ -662,16 +698,56 @@ List<List<List<List<double>>>> _processImage(XFile image) {
 
 String _mapFoodLabel(List<double> predictions) {
   final foodLabels = [
-    "กระเพราหมูสับ", "กระเพราเนื้อเปื่อย", "กระเพราไก่", "ก๋วยเตี๋ยว",
-    "ขนมจีนน้ำยา", "ข้าวขาหมู", "ข้าวซอยไก่", "ข้าวต้มกุ้ง", "ข้าวต้มปลา", "ข้าวต้มหมูสับ",
-    "ข้าวผัดกุ้ง", "ข้าวผัดไข่", "ข้าวมันไก่", "ข้าวหมูทอดกระเทียม", "ข้าวหมูแดง",
-    "ข้าวเหนียวหมูปิ้ง", "ข้าวไข่เจียว", "คอหมูย่าง", "คะน้าหมูกรอบ", "ชาบู",
-    "ซูชิ", "ต้มยำกุ้ง", "ต้มเนื้อ", "ต้มไก่", "น้ำปั่นผลไม้",
-    "น้ำอัดลม", "บะหมี่กึ่งสำเร็จรูป", "ปลาทอด", "ปลาหมึกผัดไข่เค็ม", "ผัดกะเพราหมูกรอบ",
-    "ผัดซีอิ๊วหมู", "ผัดผักรวมมิตร", "ผัดไทย", "ยำทะเล", "ลาบหมู",
-    "ลูกชิ้นหมู", "สปาเกตตีผัดขี้เมา", "สลัดผัก", "สุกี้น้ำ", "ส้มตำ",
-    "หมูกระทะ", "หอยทอด", "แกงจืด", "แกงหน่อไม้", "แกงเขียวหวาน",
-    "ไก่ทอด", "ไก่ย่าง", "ไข่พะโล้", "ไม่มีอาหาร", "ไส้กรอกอีสาน",
+    "กระเพราหมูสับ",
+    "กระเพราเนื้อเปื่อย",
+    "กระเพราไก่",
+    "ก๋วยเตี๋ยว",
+    "ขนมจีนน้ำยา",
+    "ข้าวขาหมู",
+    "ข้าวซอยไก่",
+    "ข้าวต้มกุ้ง",
+    "ข้าวต้มปลา",
+    "ข้าวต้มหมูสับ",
+    "ข้าวผัดกุ้ง",
+    "ข้าวผัดไข่",
+    "ข้าวมันไก่",
+    "ข้าวหมูทอดกระเทียม",
+    "ข้าวหมูแดง",
+    "ข้าวเหนียวหมูปิ้ง",
+    "ข้าวไข่เจียว",
+    "คอหมูย่าง",
+    "คะน้าหมูกรอบ",
+    "ชาบู",
+    "ซูชิ",
+    "ต้มยำกุ้ง",
+    "ต้มเนื้อ",
+    "ต้มไก่",
+    "น้ำปั่นผลไม้",
+    "น้ำอัดลม",
+    "บะหมี่กึ่งสำเร็จรูป",
+    "ปลาทอด",
+    "ปลาหมึกผัดไข่เค็ม",
+    "ผัดกะเพราหมูกรอบ",
+    "ผัดซีอิ๊วหมู",
+    "ผัดผักรวมมิตร",
+    "ผัดไทย",
+    "ยำทะเล",
+    "ลาบหมู",
+    "ลูกชิ้นหมู",
+    "สปาเกตตีผัดขี้เมา",
+    "สลัดผัก",
+    "สุกี้น้ำ",
+    "ส้มตำ",
+    "หมูกระทะ",
+    "หอยทอด",
+    "แกงจืด",
+    "แกงหน่อไม้",
+    "แกงเขียวหวาน",
+    "ไก่ทอด",
+    "ไก่ย่าง",
+    "ไข่พะโล้",
+    "ไม่มีอาหาร",
+    "ไส้กรอกอีสาน",
   ];
 
   int predictedIndex = predictions.indexOf(
