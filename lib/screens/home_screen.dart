@@ -446,7 +446,7 @@ class _HomeScreenState extends State<HomeScreen> {
       },
       {
         "name": "ผัดกะเพราหมูกรอบ",
-        "image": "assets/food/กะเพราหมูกรอบ.jpg",
+        "image": "assets/food/ผัดกระเพราหมูกรอบ.jpg",
         "calories": 500,
         "type": "gain",
         "allergy": ["ไข่"],

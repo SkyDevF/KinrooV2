@@ -105,6 +105,7 @@ flutter:
     - assets/food/ข้าวซอยไก่.jpg
     - assets/food/ข้าวผัดกุ้ง.jpg
     - assets/food/ข้าวผัดไข่.jpg
+    - assets/food/ข้าวขาหมู.jpg
     - assets/food/ข้าวหมูทอดกระเทียม.jpg
     - assets/food/ข้าวเหนียวหมูปิ้ง.jpg
     - assets/food/ไข่พะโล้.jpg
@@ -115,8 +116,8 @@ flutter:
     - assets/food/มาม่า.jpg
     - assets/food/ซูชิ.jpg
     - assets/food/ปลาทอด.jpg
-    - assets/food/ผัดกระเพราหมูกรอบ.jpg
     - assets/food/ผัดไทย.jpg
+    - assets/food/ผัดผักรวมมิตร.jpg
     - assets/food/ยำทะเล.jpg
     - assets/food/ลาบหมู.jpg
     - assets/food/ลูกชิ้นหมู.jpg
@@ -127,6 +128,7 @@ flutter:
     - assets/food/ไส้กรอกอีสาน.jpg
     - assets/food/หมูกระทะ.jpg
     - assets/food/หอยทอด.jpg
+    - assets/food/ผัดกระเพราหมูกรอบ.jpg
   fonts:
       - family: Kanit
         fonts:
