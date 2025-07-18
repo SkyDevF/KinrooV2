@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:flutter/foundation.dart';
+
 import 'register_screen.dart';
 import 'home_screen.dart';
 import 'forgot_password_screen.dart';
 import 'input_birthday_screen.dart';
+import 'google_register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -24,7 +25,6 @@ class _LoginScreenState extends State<LoginScreen> {
   String errorMessage = '';
   bool _obscureText = true;
   bool _isLoggingIn = false;
-  bool _isGoogleLoading = false;
 
   Future<void> _signIn() async {
     if (emailController.text.trim().isEmpty ||
@@ -68,86 +68,12 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  // ✅ Google Sign In
-  // ✅ กำหนด GoogleSignIn ด้วย Web Client ID
-  final GoogleSignIn _googleSignIn = GoogleSignIn(
-    scopes: ['email'],
-    clientId:
-        '620249493204-ql9vgs17um93p2m701s2defdt14dfkl7.apps.googleusercontent.com',
-  );
-
-  // ✅ Google Sign In แบบรวมทั้งหมด
-  Future<void> _signInWithGoogle() async {
-    if (!mounted) return;
-    setState(() => _isGoogleLoading = true);
-
-    try {
-      await _googleSignIn.signOut(); // เผื่อเคยล็อกอินค้างไว้
-
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      if (googleUser == null) {
-        setState(() => _isGoogleLoading = false);
-        return; // ผู้ใช้กดยกเลิก
-      }
-
-      final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
-
-      if (googleAuth.accessToken == null || googleAuth.idToken == null) {
-        throw Exception("Google authentication tokens are null");
-      }
-
-      final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-
-      final UserCredential userCredential = await FirebaseAuth.instance
-          .signInWithCredential(credential);
-      final User? user = userCredential.user;
-
-      if (user == null) throw Exception("Firebase user is null");
-
-      final DocumentReference userRef = FirebaseFirestore.instance
-          .collection("users")
-          .doc(user.uid);
-      final DocumentSnapshot userDoc = await userRef.get();
-
-      if (!userDoc.exists) {
-        // ➤ ผู้ใช้ใหม่: สร้างข้อมูลพื้นฐาน
-        await userRef.set({
-          'email': user.email ?? '',
-          'displayName': user.displayName ?? '',
-          'photoURL': user.photoURL ?? '',
-          'provider': 'google',
-          'createdAt': FieldValue.serverTimestamp(),
-        });
-
-        if (!mounted) return;
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => InputBirthdayScreen()),
-        );
-      } else {
-        // ➤ ผู้ใช้เดิม
-        if (!mounted) return;
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => HomeScreen()),
-        );
-      }
-    } catch (e) {
-      debugPrint("Google Sign In Error: $e");
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("เข้าสู่ระบบด้วย Google ไม่สำเร็จ กรุณาลองอีกครั้ง"),
-          ),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isGoogleLoading = false);
-    }
+  Future<void> _navigateToGoogleRegister() async {
+    // Navigate to Google registration screen
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => GoogleRegisterScreen()),
+    );
   }
 
   @override
@@ -320,22 +246,14 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       minimumSize: Size(double.infinity, 50),
                     ),
-                    onPressed: _isGoogleLoading ? null : _signInWithGoogle,
-                    icon: _isGoogleLoading
-                        ? SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : Image.asset(
-                            'assets/icon/google_logo.png', // ต้องเพิ่มไฟล์ logo
-                            height: 24,
-                            width: 24,
-                          ),
+                    onPressed: _navigateToGoogleRegister,
+                    icon: Image.asset(
+                      'assets/icon/google_logo.png', // ต้องเพิ่มไฟล์ logo
+                      height: 24,
+                      width: 24,
+                    ),
                     label: Text(
-                      _isGoogleLoading
-                          ? "กำลังเข้าสู่ระบบ..."
-                          : "เข้าสู่ระบบด้วย Google",
+                      "เข้าสู่ระบบด้วย Google",
                       style: TextStyle(fontSize: 16),
                     ),
                   ),

@@ -58,11 +58,27 @@
       },
       "oauth_client": [
         {
+          "client_id": "620249493204-0onpef5bie7h7jprsr9lboenbfonsda3.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.kinroo.app",
+            "certificate_hash": "8bae5fe5ca79c079743062379aa832bcd8620ebd"
+          }
+        },
+        {
           "client_id": "620249493204-70365l3p950kro64detl4k2d3o01i8oo.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.kinroo.app",
             "certificate_hash": "70efb7558534701bc81cf77aced94bd8eb6bd508"
+          }
+        },
+        {
+          "client_id": "620249493204-p3kg8lu8npibbaj6d1g576sshogvthuf.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.kinroo.app",
+            "certificate_hash": "fb1f10f32c4a5fb3e88f67934765a6ef73ba650d"
           }
         },
         {
