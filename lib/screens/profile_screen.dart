@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'update_weight_screen.dart';
 import 'welcome_screen.dart';
+import 'edit_profile_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   @override
@@ -127,12 +127,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Color.fromARGB(255, 70, 51, 43),
               ),
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => UpdateWeightScreen()),
-              ),
+              onPressed: () async {
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => EditProfileScreen()),
+                );
+                if (result == true) {
+                  _fetchUserData(); // รีเฟรชข้อมูลหลังแก้ไข
+                }
+              },
               child: Text(
-                "อัปเดตน้ำหนัก",
+                "แก้ไขข้อมูลส่วนตัว",
                 style: TextStyle(color: Colors.white, fontSize: 18),
               ),
             ),

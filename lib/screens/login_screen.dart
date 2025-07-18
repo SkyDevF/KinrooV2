@@ -2,14 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter/foundation.dart';
 import 'register_screen.dart';
 import 'home_screen.dart';
 import 'forgot_password_screen.dart';
 import 'input_birthday_screen.dart';
 
 class LoginScreen extends StatefulWidget {
+  const LoginScreen({Key? key}) : super(key: key);
+
   @override
-  _LoginScreenState createState() => _LoginScreenState();
+  State<LoginScreen> createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
@@ -17,16 +20,18 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController passwordController = TextEditingController();
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
-  
+
   String errorMessage = '';
   bool _obscureText = true;
   bool _isLoggingIn = false;
   bool _isGoogleLoading = false;
 
   Future<void> _signIn() async {
-    if (emailController.text.trim().isEmpty || passwordController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("กรุณากรอกอีเมลและรหัสผ่าน")));
+    if (emailController.text.trim().isEmpty ||
+        passwordController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("กรุณากรอกอีเมลและรหัสผ่าน")));
       return;
     }
 
@@ -41,32 +46,52 @@ class _LoginScreenState extends State<LoginScreen> {
       User? user = userCredential.user;
       if (user == null) throw Exception("เข้าสู่ระบบไม่สำเร็จ");
 
-      DocumentSnapshot userDoc = await _firestore.collection("users").doc(user.uid).get();
+      DocumentSnapshot userDoc = await _firestore
+          .collection("users")
+          .doc(user.uid)
+          .get();
 
       if (!mounted) return;
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => userDoc.exists ? HomeScreen() : InputBirthdayScreen()));
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => userDoc.exists ? HomeScreen() : InputBirthdayScreen(),
+        ),
+      );
     } catch (e) {
       setState(() => errorMessage = "เข้าสู่ระบบไม่สำเร็จ: ${e.toString()}");
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errorMessage)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(errorMessage)));
     } finally {
       setState(() => _isLoggingIn = false);
     }
   }
 
   // ✅ Google Sign In
+  // ✅ กำหนด GoogleSignIn ด้วย Web Client ID
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    scopes: ['email'],
+    clientId:
+        '620249493204-ql9vgs17um93p2m701s2defdt14dfkl7.apps.googleusercontent.com',
+  );
+
+  // ✅ Google Sign In แบบรวมทั้งหมด
   Future<void> _signInWithGoogle() async {
+    if (!mounted) return;
     setState(() => _isGoogleLoading = true);
 
     try {
-      await _googleSignIn.signOut();
+      await _googleSignIn.signOut(); // เผื่อเคยล็อกอินค้างไว้
 
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       if (googleUser == null) {
         setState(() => _isGoogleLoading = false);
-        return;
+        return; // ผู้ใช้กดยกเลิก
       }
 
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
 
       if (googleAuth.accessToken == null || googleAuth.idToken == null) {
         throw Exception("Google authentication tokens are null");
@@ -77,42 +102,47 @@ class _LoginScreenState extends State<LoginScreen> {
         idToken: googleAuth.idToken,
       );
 
-      UserCredential userCredential = await _auth.signInWithCredential(credential);
-      User? user = userCredential.user;
+      final UserCredential userCredential = await FirebaseAuth.instance
+          .signInWithCredential(credential);
+      final User? user = userCredential.user;
 
-      if (user != null) {
-        final DocumentReference userRef = _firestore.collection("users").doc(user.uid);
-        final DocumentSnapshot userDoc = await userRef.get();
+      if (user == null) throw Exception("Firebase user is null");
 
-        if (!userDoc.exists) {
-          // ➤ ผู้ใช้ใหม่: บันทึกข้อมูลเบื้องต้น
-          await userRef.set({
-            'email': user.email ?? '',
-            'displayName': user.displayName ?? '',
-            'photoURL': user.photoURL ?? '',
-            'provider': 'google',
-            'createdAt': FieldValue.serverTimestamp(),
-          });
+      final DocumentReference userRef = FirebaseFirestore.instance
+          .collection("users")
+          .doc(user.uid);
+      final DocumentSnapshot userDoc = await userRef.get();
 
-          if (!mounted) return;
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => InputBirthdayScreen()),
-          );
-        } else {
-          // ➤ ผู้ใช้เดิม
-          if (!mounted) return;
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => HomeScreen()),
-          );
-        }
+      if (!userDoc.exists) {
+        // ➤ ผู้ใช้ใหม่: สร้างข้อมูลพื้นฐาน
+        await userRef.set({
+          'email': user.email ?? '',
+          'displayName': user.displayName ?? '',
+          'photoURL': user.photoURL ?? '',
+          'provider': 'google',
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+
+        if (!mounted) return;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => InputBirthdayScreen()),
+        );
+      } else {
+        // ➤ ผู้ใช้เดิม
+        if (!mounted) return;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => HomeScreen()),
+        );
       }
     } catch (e) {
-      print("Google Sign In Error: $e");
+      debugPrint("Google Sign In Error: $e");
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Google Sign In ไม่สำเร็จ: กรุณาลองใหม่อีกครั้ง")),
+          SnackBar(
+            content: Text("เข้าสู่ระบบด้วย Google ไม่สำเร็จ กรุณาลองอีกครั้ง"),
+          ),
         );
       }
     } finally {
@@ -133,36 +163,45 @@ class _LoginScreenState extends State<LoginScreen> {
           child: ConstrainedBox(
             // ✅ ให้ content มีความสูงขั้นต่ำเท่ากับหน้าจอ
             constraints: BoxConstraints(
-              minHeight: MediaQuery.of(context).size.height - 
-                        MediaQuery.of(context).padding.top - 
-                        MediaQuery.of(context).padding.bottom - 32,
+              minHeight:
+                  MediaQuery.of(context).size.height -
+                  MediaQuery.of(context).padding.top -
+                  MediaQuery.of(context).padding.bottom -
+                  32,
             ),
             child: IntrinsicHeight(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   // ✅ ลด spacing เมื่อหน้าจอเล็ก
-                  SizedBox(height: MediaQuery.of(context).size.height < 700 ? 20 : 40),
-                  
+                  SizedBox(
+                    height: MediaQuery.of(context).size.height < 700 ? 20 : 40,
+                  ),
+
                   Text(
-                    "ยินดีต้อนรับ\nล็อกอินบัญชีเพื่อใช้งาน", 
+                    "ยินดีต้อนรับ\nล็อกอินบัญชีเพื่อใช้งาน",
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontSize: MediaQuery.of(context).size.height < 700 ? 22 : 26, 
-                      fontWeight: FontWeight.bold, 
-                      color: Colors.blue[900]
-                    )
+                      fontSize: MediaQuery.of(context).size.height < 700
+                          ? 22
+                          : 26,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue[900],
+                    ),
                   ),
                   SizedBox(height: 24),
 
                   TextField(
-                    controller: emailController, 
+                    controller: emailController,
                     decoration: InputDecoration(
-                      labelText: "กรอกอีเมลของคุณ", 
-                      border: OutlineInputBorder(), 
+                      labelText: "กรอกอีเมลของคุณ",
+                      border: OutlineInputBorder(),
                       prefixIcon: Icon(Icons.email),
-                      contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                    )
+                      contentPadding: EdgeInsets.symmetric(
+                        vertical: 12,
+                        horizontal: 16,
+                      ),
+                    ),
                   ),
                   SizedBox(height: 16),
 
@@ -172,27 +211,48 @@ class _LoginScreenState extends State<LoginScreen> {
                     decoration: InputDecoration(
                       labelText: "กรอกรหัสผ่านของคุณ",
                       border: OutlineInputBorder(),
-                      contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                      contentPadding: EdgeInsets.symmetric(
+                        vertical: 12,
+                        horizontal: 16,
+                      ),
                       suffixIcon: IconButton(
-                        icon: Icon(_obscureText ? Icons.visibility_off : Icons.visibility),
+                        icon: Icon(
+                          _obscureText
+                              ? Icons.visibility_off
+                              : Icons.visibility,
+                        ),
                         color: Colors.grey,
-                        tooltip: _obscureText ? "เปิดการมองเห็นรหัสผ่าน" : "ปิดการมองเห็นรหัสผ่าน",
-                        onPressed: () => setState(() => _obscureText = !_obscureText),
+                        tooltip: _obscureText
+                            ? "เปิดการมองเห็นรหัสผ่าน"
+                            : "ปิดการมองเห็นรหัสผ่าน",
+                        onPressed: () =>
+                            setState(() => _obscureText = !_obscureText),
                       ),
                     ),
                   ),
                   SizedBox(height: 8),
 
                   if (errorMessage.isNotEmpty) ...[
-                    Text(errorMessage, style: TextStyle(color: Colors.red, fontSize: 14)),
+                    Text(
+                      errorMessage,
+                      style: TextStyle(color: Colors.red, fontSize: 14),
+                    ),
                     SizedBox(height: 8),
                   ],
 
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
-                      onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ForgotPasswordScreen())),
-                      child: Text("ลืมรหัสผ่าน?", style: TextStyle(color: Colors.blue[900])),
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ForgotPasswordScreen(),
+                        ),
+                      ),
+                      child: Text(
+                        "ลืมรหัสผ่าน?",
+                        style: TextStyle(color: Colors.blue[900]),
+                      ),
                     ),
                   ),
                   SizedBox(height: 16),
@@ -200,9 +260,14 @@ class _LoginScreenState extends State<LoginScreen> {
                   // ปุ่มเข้าสู่ระบบปกติ
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.black, 
-                      padding: EdgeInsets.symmetric(vertical: 15, horizontal: 80), 
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                      backgroundColor: Colors.black,
+                      padding: EdgeInsets.symmetric(
+                        vertical: 15,
+                        horizontal: 80,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
                       minimumSize: Size(double.infinity, 50),
                     ),
                     onPressed: _isLoggingIn ? null : _signIn,
@@ -210,11 +275,17 @@ class _LoginScreenState extends State<LoginScreen> {
                         ? SizedBox(
                             width: 20,
                             height: 20,
-                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
                           )
-                        : Text("เข้าสู่ระบบ", style: TextStyle(fontSize: 18, color: Colors.white)),
+                        : Text(
+                            "เข้าสู่ระบบ",
+                            style: TextStyle(fontSize: 18, color: Colors.white),
+                          ),
                   ),
-                  
+
                   SizedBox(height: 20),
 
                   // ขีดคั่น
@@ -223,12 +294,15 @@ class _LoginScreenState extends State<LoginScreen> {
                       Expanded(child: Divider(thickness: 1)),
                       Padding(
                         padding: EdgeInsets.symmetric(horizontal: 16),
-                        child: Text("หรือ", style: TextStyle(color: Colors.grey[600])),
+                        child: Text(
+                          "หรือ",
+                          style: TextStyle(color: Colors.grey[600]),
+                        ),
                       ),
                       Expanded(child: Divider(thickness: 1)),
                     ],
                   ),
-                  
+
                   SizedBox(height: 20),
 
                   // ปุ่ม Google Sign In
@@ -236,7 +310,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white,
                       foregroundColor: Colors.black87,
-                      padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                      padding: EdgeInsets.symmetric(
+                        vertical: 12,
+                        horizontal: 24,
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                         side: BorderSide(color: Colors.grey[300]!),
@@ -244,7 +321,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       minimumSize: Size(double.infinity, 50),
                     ),
                     onPressed: _isGoogleLoading ? null : _signInWithGoogle,
-                    icon: _isGoogleLoading 
+                    icon: _isGoogleLoading
                         ? SizedBox(
                             width: 20,
                             height: 20,
@@ -256,7 +333,9 @@ class _LoginScreenState extends State<LoginScreen> {
                             width: 24,
                           ),
                     label: Text(
-                      _isGoogleLoading ? "กำลังเข้าสู่ระบบ..." : "เข้าสู่ระบบด้วย Google",
+                      _isGoogleLoading
+                          ? "กำลังเข้าสู่ระบบ..."
+                          : "เข้าสู่ระบบด้วย Google",
                       style: TextStyle(fontSize: 16),
                     ),
                   ),
@@ -264,10 +343,16 @@ class _LoginScreenState extends State<LoginScreen> {
                   SizedBox(height: 16),
 
                   TextButton(
-                    onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => RegisterScreen())),
-                    child: Text("ไม่มีบัญชีผู้ใช้? สร้างเลย", style: TextStyle(fontSize: 16, color: Colors.blue[900])),
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => RegisterScreen()),
+                    ),
+                    child: Text(
+                      "ไม่มีบัญชีผู้ใช้? สร้างเลย",
+                      style: TextStyle(fontSize: 16, color: Colors.blue[900]),
+                    ),
                   ),
-                  
+
                   // ✅ เพิ่ม spacing ท้าย
                   SizedBox(height: 20),
                 ],
