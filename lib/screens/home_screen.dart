@@ -290,87 +290,83 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
- Widget _buildWeightGoal() {
-  double? progressValue = 0;
-  if (startWeight != 0 && targetWeight != 0 && weight != 0) {
-    double totalDiff = (targetWeight - startWeight).abs().toDouble();
-    double currentDiff = (weight - targetWeight).abs().toDouble();
-    progressValue =
-        (totalDiff == 0 ? 1.0 : (1.0 - (currentDiff / totalDiff)))
-            .clamp(0.0, 1.0);
-  }
-  int percentage = (progressValue * 100).round();
+  Widget _buildWeightGoal() {
+    double? progressValue = 0;
+    if (startWeight != 0 && targetWeight != 0 && weight != 0) {
+      double totalDiff = (targetWeight - startWeight).abs().toDouble();
+      double currentDiff = (weight - targetWeight).abs().toDouble();
+      progressValue = (totalDiff == 0 ? 1.0 : (1.0 - (currentDiff / totalDiff)))
+          .clamp(0.0, 1.0);
+    }
+    int percentage = (progressValue * 100).round();
 
-  return _buildContainer(
-    child: Stack(
-      children: [
-        // กล่องเนื้อหาเป้าหมายน้ำหนัก
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "เป้าหมายน้ำหนัก",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 10),
-            Text(
-              "ปัจจุบัน: ${weight.toStringAsFixed(1)} kg",
-              style: TextStyle(fontSize: 14),
-            ),
-            Text(
-              "เป้าหมาย: ${targetWeight.toStringAsFixed(1)} kg",
-              style: TextStyle(fontSize: 14),
-            ),
-            SizedBox(height: 15),
-            _buildProgressBar(
-              progressValue,
-              color: percentage >= 100
-                  ? Colors.green
-                  : Color.fromARGB(255, 70, 51, 43),
-            ),
-            SizedBox(height: 10),
-            Text(
-              "$percentage% สำเร็จ",
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: percentage >= 100 ? Colors.green : Colors.black,
+    return _buildContainer(
+      child: Stack(
+        children: [
+          // กล่องเนื้อหาเป้าหมายน้ำหนัก
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "เป้าหมายน้ำหนัก",
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
-            ),
-          ],
-        ),
-
-        // ปุ่มอัปเดตน้ำหนัก (มุมขวาบน)
-        Positioned(
-          top: 0,
-          right: 0,
-          child: TextButton(
-            style: TextButton.styleFrom(
-              backgroundColor: Color.fromARGB(255, 70, 51, 43), // สี brown
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(6),
+              SizedBox(height: 10),
+              Text(
+                "ปัจจุบัน: ${weight.toStringAsFixed(1)} kg",
+                style: TextStyle(fontSize: 14),
               ),
-              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            ),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => UpdateWeightScreen(),
+              Text(
+                "เป้าหมาย: ${targetWeight.toStringAsFixed(1)} kg",
+                style: TextStyle(fontSize: 14),
+              ),
+              SizedBox(height: 15),
+              _buildProgressBar(
+                progressValue,
+                color: percentage >= 100
+                    ? Colors.green
+                    : Color.fromARGB(255, 70, 51, 43),
+              ),
+              SizedBox(height: 10),
+              Text(
+                "$percentage% สำเร็จ",
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: percentage >= 100 ? Colors.green : Colors.black,
                 ),
-              );
-            },
-            child: Text(
-              "อัปเดต",
-              style: TextStyle(color: Colors.white, fontSize: 12),
+              ),
+            ],
+          ),
+
+          // ปุ่มอัปเดตน้ำหนัก (มุมขวาบน)
+          Positioned(
+            top: 0,
+            right: 0,
+            child: TextButton(
+              style: TextButton.styleFrom(
+                backgroundColor: Color.fromARGB(255, 70, 51, 43), // สี brown
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              ),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => UpdateWeightScreen()),
+                );
+              },
+              child: Text(
+                "อัปเดต",
+                style: TextStyle(color: Colors.white, fontSize: 12),
+              ),
             ),
           ),
-        ),
-      ],
-    ),
-  );
-}
-
+        ],
+      ),
+    );
+  }
 
   Widget _buildFoodRecommendation() {
     final foodMenu = [
@@ -818,8 +814,21 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildWeekDays() {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+      padding: EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 15,
+            spreadRadius: 2,
+            offset: Offset(0, 5),
+          ),
+        ],
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: weekDays.map(_weekDayContainer).toList(),
@@ -832,14 +841,48 @@ class _HomeScreenState extends State<HomeScreen> {
         date.day == today.day &&
         date.month == today.month &&
         date.year == today.year;
-    return Container(
+
+    return AnimatedContainer(
+      duration: Duration(milliseconds: 300),
       alignment: Alignment.center,
-      width: 50,
-      height: 70,
+      width: 42,
+      height: 65,
       decoration: BoxDecoration(
-        color: isToday ? Color.fromARGB(255, 70, 51, 43) : Colors.white,
-        borderRadius: BorderRadius.circular(25),
-        border: Border.all(color: Colors.grey),
+        gradient: isToday
+            ? LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Color.fromARGB(255, 70, 51, 43),
+                  Color.fromARGB(255, 90, 71, 63),
+                ],
+              )
+            : LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Colors.grey[50]!, Colors.grey[100]!],
+              ),
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: isToday
+            ? [
+                BoxShadow(
+                  color: Color.fromARGB(255, 70, 51, 43).withOpacity(0.4),
+                  blurRadius: 8,
+                  spreadRadius: 1,
+                  offset: Offset(0, 3),
+                ),
+              ]
+            : [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.2),
+                  blurRadius: 4,
+                  spreadRadius: 0,
+                  offset: Offset(0, 2),
+                ),
+              ],
+        border: isToday
+            ? null
+            : Border.all(color: Colors.grey.withOpacity(0.3), width: 1),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -847,17 +890,19 @@ class _HomeScreenState extends State<HomeScreen> {
           Text(
             thaiWeekDays[date.weekday] ?? "",
             style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: isToday ? Colors.white : Colors.black,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: isToday ? Colors.white : Colors.grey[600],
+              letterSpacing: 0.5,
             ),
           ),
+          SizedBox(height: 4),
           Text(
             "${date.day}",
             style: TextStyle(
-              fontSize: 18,
+              fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: isToday ? Colors.white : Colors.black,
+              color: isToday ? Colors.white : Color.fromARGB(255, 70, 51, 43),
             ),
           ),
         ],
