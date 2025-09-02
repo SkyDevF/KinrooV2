@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'home_screen.dart';
 
 class FinalScreen extends StatelessWidget {
+  const FinalScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

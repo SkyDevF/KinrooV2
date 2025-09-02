@@ -4,6 +4,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'input_weight_height_screen.dart';
 
 class InputBirthdayScreen extends StatefulWidget {
+  const InputBirthdayScreen({super.key});
+
   @override
   _InputBirthdayScreenState createState() => _InputBirthdayScreenState();
 }

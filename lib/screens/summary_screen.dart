@@ -5,6 +5,8 @@ import 'home_screen.dart';
 import 'input_goal_screen.dart'; // ✅ ย้อนกลับไปหน้าระบุเป้าหมาย
 
 class SummaryScreen extends StatefulWidget {
+  const SummaryScreen({super.key});
+
   @override
   _SummaryScreenState createState() => _SummaryScreenState();
 }

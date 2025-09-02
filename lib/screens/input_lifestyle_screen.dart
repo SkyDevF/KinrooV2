@@ -5,6 +5,8 @@ import 'input_health_screen.dart';
 import 'input_weight_height_screen.dart'; // ✅ ย้อนกลับไปหน้าระบุน้ำหนักและส่วนสูง
 
 class InputLifestyleScreen extends StatefulWidget {
+  const InputLifestyleScreen({super.key});
+
   @override
   _InputLifestyleScreenState createState() => _InputLifestyleScreenState();
 }

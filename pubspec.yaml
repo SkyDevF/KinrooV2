@@ -25,7 +25,8 @@ dependencies:
 
   
   # 📌 ตัวช่วยจัดการข้อมูลและรูปภาพ
-  provider: ^6.1.5
+  flutter_riverpod: ^2.6.1
+  riverpod_annotation: ^2.6.1
   image_picker: ^1.1.2
   intl_utils: ^2.8.10
   crystal_navigation_bar: ^1.0.4
@@ -52,16 +53,16 @@ dev_dependencies:
   
   flutter_lints: ^6.0.0
 
-flutter_launcher_icons:
-  android: "launcher_icon"
+flutter_icons:
+  android: true
   ios: true
+  image_path: "assets/icon/icon.png" # ใช้สำหรับ iOS
   remove_alpha_ios: true
   remove_alpha_android: true
-  adaptive_icon_background: "#FFFFFF"
-  adaptive_icon_foreground: "assets/icon/icon.png"
-  adaptive_icon_monochrome: "assets/icon/icon.png"
-  image_path: "assets/icon/icon.png"
+  adaptive_icon_background: "assets/icon/icon_bg.png" # แยกพื้นหลัง
+  adaptive_icon_foreground: "assets/icon/icon_fg.png" # ไอคอนหลัก (ใส่เฉพาะตัวรูป ไม่มีพื้นหลัง)
   min_sdk_android: 28
+
 
 flutter:
   uses-material-design: true

@@ -9,6 +9,8 @@ import 'package:shared_preferences/shared_preferences.dart'; // ต้องเ�
 import 'update_weight_screen.dart'; // นำเข้า UpdateWeightScreen
 
 class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }

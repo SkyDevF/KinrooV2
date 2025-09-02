@@ -4,6 +4,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'home_screen.dart';
 
 class UpdateWeightScreen extends StatefulWidget {
+  const UpdateWeightScreen({super.key});
+
   @override
   _UpdateWeightScreenState createState() => _UpdateWeightScreenState();
 }

@@ -5,6 +5,8 @@ import 'input_goal_screen.dart';
 import 'input_lifestyle_screen.dart'; // ✅ ย้อนกลับไปหน้าระบุไลฟ์สไตล์
 
 class InputHealthScreen extends StatefulWidget {
+  const InputHealthScreen({super.key});
+
   @override
   _InputHealthScreenState createState() => _InputHealthScreenState();
 }

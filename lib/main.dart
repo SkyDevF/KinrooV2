@@ -15,6 +15,8 @@ void main() async {
 }
 
 class KinrooApp extends StatelessWidget {
+  const KinrooApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(

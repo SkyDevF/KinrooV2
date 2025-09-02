@@ -5,6 +5,8 @@ import 'input_birthday_screen.dart'; // ✅ ย้อนกลับไปหน
 import 'input_lifestyle_screen.dart';
 
 class InputWeightHeightScreen extends StatefulWidget {
+  const InputWeightHeightScreen({super.key});
+
   @override
   _InputWeightHeightScreenState createState() => _InputWeightHeightScreenState();
 }
