@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'screens/intro_screen.dart';
 import 'firebase_options.dart';
@@ -11,46 +12,23 @@ void main() async {
   // ❗ ล็อกให้ใช้แนวตั้งอย่างเดียว
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
-  runApp(KinrooApp());
+  runApp(ProviderScope(child: KinrooApp()));
 }
 
-class KinrooApp extends StatelessWidget {
+class KinrooApp extends ConsumerWidget {
   const KinrooApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform,
+  Widget build(BuildContext context, WidgetRef ref) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'Kinroo',
+      theme: ThemeData(
+        fontFamily: 'Kanit',
+        useMaterial3: true,
+        primarySwatch: Colors.blue,
       ),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return MaterialApp(
-            home: Scaffold(
-              body: Center(
-                child: CircularProgressIndicator(),
-              ), // ✅ แสดงโหลดข้อมูลใน main()
-            ),
-          );
-        }
-        if (snapshot.hasError) {
-          return MaterialApp(
-            home: Scaffold(
-              body: Center(child: Text("เกิดข้อผิดพลาดในการโหลด Firebase")),
-            ),
-          );
-        }
-        return MaterialApp(
-          debugShowCheckedModeBanner: false,
-          title: 'Kinroo',
-          theme: ThemeData(
-            fontFamily: 'Kanit',
-            useMaterial3: true,
-            primarySwatch: Colors.blue,
-          ),
-          home: IntroScreen(), // ✅ ไปยังหน้าเริ่มต้นเมื่อโหลด Firebase สำเร็จ
-        );
-      },
+      home: IntroScreen(), // ✅ ไปยังหน้าเริ่มต้นเมื่อโหลด Firebase สำเร็จ
     );
   }
 }

@@ -1,28 +1,25 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/user_provider.dart';
+import '../providers/food_provider.dart';
+import '../providers/navigation_provider.dart';
+import '../providers/food_menu_provider.dart';
 import 'profile_screen.dart';
 import 'food_history_screen.dart';
 import 'scan_food_screen.dart';
 import 'package:crystal_navigation_bar/crystal_navigation_bar.dart';
-import 'package:shared_preferences/shared_preferences.dart'; // ต้องเพิ่ม
-import 'update_weight_screen.dart'; // นำเข้า UpdateWeightScreen
+import 'update_weight_screen.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  _HomeScreenState createState() => _HomeScreenState();
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
 // This widget serves as the main home screen of the app, displaying user health data, food history, and navigation options.
-class _HomeScreenState extends State<HomeScreen> {
-  String username = "กำลังโหลด...", gender = "";
-  double weight = 0.0, height = 0.0, targetWeight = 0.0, startWeight = 75.0;
-  int calorieGoal = 2000, consumedCalories = 0, currentIndex = 0;
-  DateTime today = DateTime.now();
-  List<DateTime> weekDays = [];
-  List<Map<String, dynamic>> foodHistory = [];
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  double startWeight = 75.0;
 
   final thaiWeekDays = {
     1: "จ.",
@@ -37,148 +34,51 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    _generateWeek();
     _checkForNewDay();
   }
 
   void _checkForNewDay() async {
-    final prefs = await SharedPreferences.getInstance();
-    String todayStr = DateTime.now().toIso8601String().substring(0, 10);
-    String? lastRecordedDate = prefs.getString('last_date');
-
-    if (lastRecordedDate != todayStr) {
-      // วันใหม่ → รีเซ็ตอาหารและแคลอรี่
-      await prefs.setString('last_date', todayStr);
-
-      // รีเซ็ตข้อมูลใน State
-      setState(() {
-        foodHistory = [];
-        consumedCalories = 0;
-      });
-    }
-
-    _loadAllData(); // โหลดข้อมูลหลังจากตรวจวัน
-  }
-
-  void _loadAllData() async {
-    await Future.wait([
-      fetchUserData(),
-      fetchDailyCalories(),
-      fetchFoodHistory(),
-    ]);
-  }
-
-  void _generateWeek() {
-    DateTime firstDay = today.subtract(Duration(days: today.weekday - 1));
-    weekDays = List.generate(7, (i) => firstDay.add(Duration(days: i)));
-  }
-
-  Future<void> fetchUserData() async {
-    User? user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
-
-    await user.reload();
-    FirebaseFirestore.instance
-        .collection('users')
-        .doc(user.uid)
-        .snapshots()
-        .listen((doc) {
-          if (doc.exists && mounted)
-            setState(() {
-              username = doc['name'];
-              gender = doc['gender'];
-              weight = double.tryParse(doc['weight'].toString()) ?? 0.0;
-              height = double.tryParse(doc['height'].toString()) ?? 0.0;
-              targetWeight =
-                  double.tryParse(doc['targetWeight'].toString()) ?? weight;
-            });
-        });
-  }
-
-  Future<void> fetchDailyCalories() async {
-    User? user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
-
-    var doc = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(user.uid)
-        .get();
-    if (doc.exists && mounted) {
-      setState(() => calorieGoal = doc.get("daily_calories") ?? 2000);
-    }
-  }
-
-  Future<void> fetchFoodHistory() async {
-    try {
-      String userId = FirebaseAuth.instance.currentUser?.uid ?? "unknown_user";
-
-      // กำหนดช่วงเวลาของวันนี้ (00:00:00 - 23:59:59)
-      DateTime today = DateTime.now();
-      DateTime startOfDay = DateTime(today.year, today.month, today.day);
-      DateTime endOfDay = startOfDay
-          .add(Duration(days: 1))
-          .subtract(Duration(milliseconds: 1));
-
-      var snapshot = await FirebaseFirestore.instance
-          .collection("users")
-          .doc(userId)
-          .collection("food_history")
-          .where("timestamp", isGreaterThanOrEqualTo: startOfDay)
-          .where("timestamp", isLessThanOrEqualTo: endOfDay)
-          .get();
-
-      List<Map<String, dynamic>> foodList = snapshot.docs
-          .map((doc) => doc.data())
-          .toList();
-
-      setState(() {
-        foodHistory = foodList;
-        consumedCalories = foodList.fold(
-          0,
-          (sum, food) => sum + (food["calories"] as num).toInt(),
-        );
-      });
-    } catch (e) {
-      print("❌ เกิดข้อผิดพลาดขณะดึงข้อมูลจาก Firebase: $e");
-    }
-  }
-
-  // Computed properties
-  double get bmi => (weight == 0 || height == 0)
-      ? 0.0
-      : weight / ((height / 100) * (height / 100));
-  String get healthAdvice => bmi < 18.5
-      ? "ควรรับประทานอาหารให้ครบ 5 หมู่"
-      : bmi <= 24.9
-      ? "รักษาสมดุลอาหารและออกกำลังกาย"
-      : "ควรควบคุมอาหารและออกกำลังกาย";
-  String get bmiImage =>
-      'assets/bmi/${gender == "ชาย" ? "man" : "girl"}_${_getBmiRange()}.png';
-
-  String _getBmiRange() {
-    if (bmi < 18.5) return "18.5";
-    if (bmi <= 24.5) return "18.5-24.5";
-    if (bmi <= 30) return "25-30";
-    if (bmi <= 39.5) return "35-39.5";
-    return "40";
+    final foodService = ref.read(foodServiceProvider);
+    await foodService.checkForNewDay();
   }
 
   @override
   Widget build(BuildContext context) {
+    final userProfileAsync = ref.watch(userProfileProvider);
+    final foodHistoryAsync = ref.watch(foodHistoryProvider);
+    final consumedCalories = ref.watch(consumedCaloriesProvider);
+    final bmi = ref.watch(bmiProvider);
+    final healthAdvice = ref.watch(healthAdviceProvider);
+    final bmiImage = ref.watch(bmiImageProvider);
+    final weekDays = ref.watch(weekDaysProvider);
+    final currentIndex = ref.watch(navigationIndexProvider);
+    final today = ref.watch(currentDateProvider);
+
     return Scaffold(
       backgroundColor: Color.fromARGB(255, 47, 130, 174),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            _buildHeader(),
-            _buildWeekDays(),
-            _buildHealthInfo(),
-            _buildWeightGoal(),
-            _buildFoodRecommendation(),
-          ],
+      body: userProfileAsync.when(
+        data: (userProfile) => SingleChildScrollView(
+          child: Column(
+            children: [
+              _buildHeader(),
+              _buildWeekDays(weekDays, today),
+              _buildHealthInfo(
+                userProfile,
+                consumedCalories,
+                bmi,
+                healthAdvice,
+                bmiImage,
+                foodHistoryAsync,
+              ),
+              _buildWeightGoal(userProfile),
+              _buildFoodRecommendation(bmi),
+            ],
+          ),
         ),
+        loading: () => Center(child: CircularProgressIndicator()),
+        error: (error, stack) => Center(child: Text('เกิดข้อผิดพลาด: $error')),
       ),
-      bottomNavigationBar: _buildNavigation(),
+      bottomNavigationBar: _buildNavigation(currentIndex),
     );
   }
 
@@ -210,7 +110,16 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildHealthInfo() {
+  Widget _buildHealthInfo(
+    UserProfile? userProfile,
+    int consumedCalories,
+    double bmi,
+    String healthAdvice,
+    String bmiImage,
+    AsyncValue<List<FoodItem>> foodHistoryAsync,
+  ) {
+    if (userProfile == null) return SizedBox.shrink();
+
     return _buildContainer(
       child: Row(
         children: [
@@ -221,7 +130,7 @@ class _HomeScreenState extends State<HomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "ข้อมูลสุขภาพ คุณ$username",
+                  "ข้อมูลสุขภาพ คุณ${userProfile.name}",
                   style: TextStyle(
                     fontSize: 19,
                     fontWeight: FontWeight.bold,
@@ -245,8 +154,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 SizedBox(height: 15),
                 _buildProgressBar(
-                  consumedCalories / calorieGoal,
-                  color: consumedCalories >= calorieGoal
+                  consumedCalories / userProfile.dailyCalories,
+                  color: consumedCalories >= userProfile.dailyCalories
                       ? Colors.red
                       : Color.fromARGB(255, 70, 51, 43),
                   height: 35,
@@ -254,11 +163,17 @@ class _HomeScreenState extends State<HomeScreen> {
                 SizedBox(height: 10),
                 Center(
                   child: Text(
-                    "$consumedCalories / $calorieGoal kcal",
+                    "$consumedCalories / ${userProfile.dailyCalories} kcal",
                     style: TextStyle(fontSize: 14, color: Colors.black),
                   ),
                 ),
-                if (foodHistory.isNotEmpty) _buildFoodList(),
+                foodHistoryAsync.when(
+                  data: (foodHistory) => foodHistory.isNotEmpty
+                      ? _buildFoodList(foodHistory)
+                      : SizedBox.shrink(),
+                  loading: () => SizedBox.shrink(),
+                  error: (_, __) => SizedBox.shrink(),
+                ),
               ],
             ),
           ),
@@ -267,7 +182,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildFoodList() {
+  Widget _buildFoodList(List<FoodItem> foodHistory) {
     return Container(
       padding: EdgeInsets.all(10),
       decoration: BoxDecoration(
@@ -283,7 +198,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           ...foodHistory.map(
             (food) => Text(
-              "${food["food"]} (${food["calories"]} kcal)",
+              "${food.food} (${food.calories} kcal)",
               style: TextStyle(fontSize: 9, color: Colors.black),
             ),
           ),
@@ -292,11 +207,19 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildWeightGoal() {
+  Widget _buildWeightGoal(UserProfile? userProfile) {
+    if (userProfile == null) return SizedBox.shrink();
+
     double? progressValue = 0;
-    if (startWeight != 0 && targetWeight != 0 && weight != 0) {
-      double totalDiff = (targetWeight - startWeight).abs().toDouble();
-      double currentDiff = (weight - targetWeight).abs().toDouble();
+    if (startWeight != 0 &&
+        userProfile.targetWeight != 0 &&
+        userProfile.weight != 0) {
+      double totalDiff = (userProfile.targetWeight - startWeight)
+          .abs()
+          .toDouble();
+      double currentDiff = (userProfile.weight - userProfile.targetWeight)
+          .abs()
+          .toDouble();
       progressValue = (totalDiff == 0 ? 1.0 : (1.0 - (currentDiff / totalDiff)))
           .clamp(0.0, 1.0);
     }
@@ -315,11 +238,11 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               SizedBox(height: 10),
               Text(
-                "ปัจจุบัน: ${weight.toStringAsFixed(1)} kg",
+                "ปัจจุบัน: ${userProfile.weight.toStringAsFixed(1)} kg",
                 style: TextStyle(fontSize: 14),
               ),
               Text(
-                "เป้าหมาย: ${targetWeight.toStringAsFixed(1)} kg",
+                "เป้าหมาย: ${userProfile.targetWeight.toStringAsFixed(1)} kg",
                 style: TextStyle(fontSize: 14),
               ),
               SizedBox(height: 15),
@@ -370,338 +293,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildFoodRecommendation() {
-    final foodMenu = [
-      {
-        "name": "ข้าวขาหมู",
-        "image": "assets/food/ข้าวขาหมู.jpg",
-        "calories": 550,
-        "type": "gain",
-        "allergy": [],
-      },
-      {
-        "name": "ข้าวมันไก่",
-        "image": "assets/food/ข้าวมันไก่.jpg",
-        "calories": 600,
-        "type": "gain",
-        "allergy": [],
-      },
-      {
-        "name": "ข้าวซอยไก่",
-        "image": "assets/food/ข้าวซอยไก่.jpg",
-        "calories": 500,
-        "type": "gain",
-        "allergy": ["นม"],
-      },
-      {
-        "name": "หมูกระทะ",
-        "image": "assets/food/หมูกระทะ.jpg",
-        "calories": 600,
-        "type": "gain",
-        "allergy": [],
-      },
-      {
-        "name": "ไก่ทอด",
-        "image": "assets/food/ไก่ทอด.jpg",
-        "calories": 600,
-        "type": "gain",
-        "allergy": [],
-      },
-      {
-        "name": "ผัดไทย",
-        "image": "assets/food/ผัดไทย.jpg",
-        "calories": 550,
-        "type": "gain",
-        "allergy": ["ไข่"],
-      },
-      {
-        "name": "หอยทอด",
-        "image": "assets/food/หอยทอด.jpg",
-        "calories": 550,
-        "type": "gain",
-        "allergy": ["ไข่"],
-      },
-      {
-        "name": "ข้าวหมูทอดกระเทียม",
-        "image": "assets/food/ข้าวหมูทอดกระเทียม.jpg",
-        "calories": 550,
-        "type": "gain",
-        "allergy": [],
-      },
-      {
-        "name": "สปาเกตตีผัดขี้เมา",
-        "image": "assets/food/สปาเกตตี้ผัดขี้เมา.jpg",
-        "calories": 550,
-        "type": "gain",
-        "allergy": ["ไข่"],
-      },
-      {
-        "name": "ข้าวหมูแดง",
-        "image": "assets/food/ข้าวหมูแดง.jpg",
-        "calories": 500,
-        "type": "gain",
-        "allergy": [],
-      },
-      {
-        "name": "ผัดกะเพราหมูกรอบ",
-        "image": "assets/food/ผัดกระเพราหมูกรอบ.jpg",
-        "calories": 500,
-        "type": "gain",
-        "allergy": ["ไข่"],
-      },
-      {
-        "name": "ไส้กรอกอีสาน",
-        "image": "assets/food/ไส้กรอกอีสาน.jpg",
-        "calories": 500,
-        "type": "gain",
-        "allergy": [],
-      },
-      {
-        "name": "ข้าวเหนียวหมูปิ้ง",
-        "image": "assets/food/ข้าวเหนียวหมูปิ้ง.jpg",
-        "calories": 450,
-        "type": "balanced",
-        "allergy": [],
-      },
-      {
-        "name": "ข้าวผัดกุ้ง",
-        "image": "assets/food/ข้าวผัดกุ้ง.jpg",
-        "calories": 450,
-        "type": "balanced",
-        "allergy": ["กุ้ง", "ไข่"],
-      },
-      {
-        "name": "แกงเขียวหวาน",
-        "image": "assets/food/แกงเขียวหวาน.jpg",
-        "calories": 450,
-        "type": "balanced",
-        "allergy": ["นม"],
-      },
-      {
-        "name": "บะหมี่กึ่งสำเร็จรูป",
-        "image": "assets/food/มาม่า.jpg",
-        "calories": 450,
-        "type": "balanced",
-        "allergy": ["ไข่"],
-      },
-      {
-        "name": "ไก่ย่าง",
-        "image": "assets/food/ไก่ย่าง.jpg",
-        "calories": 450,
-        "type": "balanced",
-        "allergy": [],
-      },
-      {
-        "name": "ข้าวไข่เจียว",
-        "image": "assets/food/ข้าวไข่เจียว.jpg",
-        "calories": 420,
-        "type": "balanced",
-        "allergy": ["ไข่"],
-      },
-      {
-        "name": "ลาบหมู",
-        "image": "assets/food/ลาบหมู.jpg",
-        "calories": 420,
-        "type": "balanced",
-        "allergy": [],
-      },
-      {
-        "name": "ข้าวผัดไข่",
-        "image": "assets/food/ข้าวผัดไข่.jpg",
-        "calories": 400,
-        "type": "balanced",
-        "allergy": ["ไข่"],
-      },
-      {
-        "name": "ต้มเนื้อ",
-        "image": "assets/food/ต้มเนื้อ.jpg",
-        "calories": 400,
-        "type": "balanced",
-        "allergy": [],
-      },
-      {
-        "name": "ขนมจีนน้ำยา",
-        "image": "assets/food/ขนมจีนน้ำยา.jpg",
-        "calories": 400,
-        "type": "balanced",
-        "allergy": ["ปลา"],
-      },
-      {
-        "name": "ปลาทอด",
-        "image": "assets/food/ปลาทอด.jpg",
-        "calories": 400,
-        "type": "balanced",
-        "allergy": ["ปลา"],
-      },
-      {
-        "name": "สุกี้น้ำ",
-        "image": "assets/food/สุกี้น้ำ.jpg",
-        "calories": 400,
-        "type": "balanced",
-        "allergy": ["ไข่"],
-      },
-      {
-        "name": "ลูกชิ้นหมู",
-        "image": "assets/food/ลูกชิ้นหมู.jpg",
-        "calories": 380,
-        "type": "balanced",
-        "allergy": [],
-      },
-      {
-        "name": "ต้มยำกุ้ง",
-        "image": "assets/food/ต้มยำกุ้ง.jpg",
-        "calories": 360,
-        "type": "control",
-        "allergy": ["กุ้ง"],
-      },
-      {
-        "name": "ต้มไก่",
-        "image": "assets/food/ต้มไก่.jpg",
-        "calories": 350,
-        "type": "control",
-        "allergy": [],
-      },
-      {
-        "name": "ชาบู",
-        "image": "assets/food/ชาบู.jpg",
-        "calories": 350,
-        "type": "control",
-        "allergy": [],
-      },
-      {
-        "name": "ยำทะเล",
-        "image": "assets/food/ยำทะเล.jpg",
-        "calories": 350,
-        "type": "control",
-        "allergy": ["กุ้ง", "ปลา"],
-      },
-      {
-        "name": "แกงหน่อไม้",
-        "image": "assets/food/แกงหน่อไม้.jpg",
-        "calories": 350,
-        "type": "control",
-        "allergy": [],
-      },
-      {
-        "name": "ไข่พะโล้",
-        "image": "assets/food/ไข่พะโล้.jpg",
-        "calories": 350,
-        "type": "control",
-        "allergy": ["ไข่"],
-      },
-      {
-        "name": "ข้าวต้มหมูสับ",
-        "image": "assets/food/ข้าวต้มหมูสับ.jpg",
-        "calories": 340,
-        "type": "control",
-        "allergy": [],
-      },
-      {
-        "name": "กระเพราเนื้อเปื่อย",
-        "image": "assets/food/กระเพราเนื้อเปื่อย.jpg",
-        "calories": 320,
-        "type": "control",
-        "allergy": ["ไข่"],
-      },
-      {
-        "name": "ข้าวต้มกุ้ง",
-        "image": "assets/food/ข้าวต้มกุ้ง.jpg",
-        "calories": 320,
-        "type": "control",
-        "allergy": ["กุ้ง"],
-      },
-      {
-        "name": "ผัดผักรวมมิตร",
-        "image": "assets/food/ผัดผักรวมมิตร.jpg",
-        "calories": 300,
-        "type": "control",
-        "allergy": [],
-      },
-      {
-        "name": "กระเพราหมูสับ",
-        "image": "assets/food/กระเพราหมูสับ.jpg",
-        "calories": 300,
-        "type": "control",
-        "allergy": ["ไข่"],
-      },
-      {
-        "name": "ข้าวต้มปลา",
-        "image": "assets/food/ข้าวต้มปลา.jpg",
-        "calories": 300,
-        "type": "control",
-        "allergy": ["ปลา"],
-      },
-      {
-        "name": "ซูชิ",
-        "image": "assets/food/ซูชิ.jpg",
-        "calories": 280,
-        "type": "control",
-        "allergy": ["ปลา"],
-      },
-      {
-        "name": "กระเพราไก่",
-        "image": "assets/food/กระเพราไก่.jpg",
-        "calories": 280,
-        "type": "control",
-        "allergy": ["ไข่"],
-      },
-      {
-        "name": "สลัดผัก",
-        "image": "assets/food/สลัดผัก.jpg",
-        "calories": 250,
-        "type": "control",
-        "allergy": [],
-      },
-      {
-        "name": "ก๋วยเตี๋ยว",
-        "image": "assets/food/ก๋วยเตี๋ยว.jpg",
-        "calories": 250,
-        "type": "control",
-        "allergy": [],
-      },
-      {
-        "name": "แกงจืด",
-        "image": "assets/food/แกงจืด.jpg",
-        "calories": 250,
-        "type": "control",
-        "allergy": [],
-      },
-      {
-        "name": "ส้มตำ",
-        "image": "assets/food/ส้มตำ.jpg",
-        "calories": 200,
-        "type": "control",
-        "allergy": [],
-      },
-    ];
-
-    // คำนวณ BMI
-    double bmi = (weight == 0 || height == 0)
-        ? 0.0
-        : weight / ((height / 100) * (height / 100));
-
-    // เลือกประเภทเมนูตาม BMI
-    String category;
-    if (bmi < 18.5) {
-      category = "gain";
-    } else if (bmi < 25) {
-      category = "balanced";
-    } else {
-      category = "control";
-    }
-
-    // ตัวอย่าง allergy (ดึงจาก Firebase ได้)
-    List<String> userAllergy = []; // เช่น ["ไข่", "นม"]
-
-    // กรองเมนูที่ตรงประเภทและไม่ใช่อาหารที่แพ้
-    final filteredMenu = foodMenu.where((menu) {
-      return menu["type"] == category &&
-          !(menu["allergy"] as List).any((a) => userAllergy.contains(a));
-    }).toList();
-
-    // สุ่มและจำกัด 3 รายการ
-    filteredMenu.shuffle();
-    final displayedMenus = filteredMenu.take(3).toList();
+  Widget _buildFoodRecommendation(double bmi) {
+    final recommendedFood = ref.watch(recommendedFoodProvider);
 
     return _buildContainer(
       child: Column(
@@ -714,14 +307,13 @@ class _HomeScreenState extends State<HomeScreen> {
           SizedBox(height: 15),
           Container(
             height: 200,
-            child: displayedMenus.isEmpty
+            child: recommendedFood.isEmpty
                 ? Center(child: Text("ไม่พบเมนูที่เหมาะสมกับสุขภาพของคุณ"))
                 : ListView.builder(
                     scrollDirection: Axis.horizontal,
-                    itemCount: displayedMenus.length,
+                    itemCount: recommendedFood.length,
                     itemBuilder: (ctx, index) {
-                      final item = displayedMenus[index];
-                      final path = item["image"].toString();
+                      final item = recommendedFood[index];
 
                       return Container(
                         width: 150,
@@ -730,15 +322,15 @@ class _HomeScreenState extends State<HomeScreen> {
                           children: [
                             ClipRRect(
                               borderRadius: BorderRadius.circular(15),
-                              child: path.startsWith("assets/")
+                              child: item.image.startsWith("assets/")
                                   ? Image.asset(
-                                      path,
+                                      item.image,
                                       width: 150,
                                       height: 130,
                                       fit: BoxFit.cover,
                                     )
                                   : Image.network(
-                                      path,
+                                      item.image,
                                       width: 150,
                                       height: 130,
                                       fit: BoxFit.cover,
@@ -771,7 +363,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                             SizedBox(height: 8),
                             Text(
-                              item["name"].toString(),
+                              item.name,
                               style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.bold,
@@ -779,7 +371,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               textAlign: TextAlign.center,
                             ),
                             Text(
-                              "${item["calories"]} kcal",
+                              "${item.calories} kcal",
                               style: TextStyle(
                                 fontSize: 12,
                                 color: Colors.grey[600],
@@ -815,7 +407,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildWeekDays() {
+  Widget _buildWeekDays(List<DateTime> weekDays, DateTime today) {
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
       padding: EdgeInsets.all(15),
@@ -824,7 +416,7 @@ class _HomeScreenState extends State<HomeScreen> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 15,
             spreadRadius: 2,
             offset: Offset(0, 5),
@@ -833,12 +425,14 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: weekDays.map(_weekDayContainer).toList(),
+        children: weekDays
+            .map((date) => _weekDayContainer(date, today))
+            .toList(),
       ),
     );
   }
 
-  Widget _weekDayContainer(DateTime date) {
+  Widget _weekDayContainer(DateTime date, DateTime today) {
     bool isToday =
         date.day == today.day &&
         date.month == today.month &&
@@ -868,7 +462,7 @@ class _HomeScreenState extends State<HomeScreen> {
         boxShadow: isToday
             ? [
                 BoxShadow(
-                  color: Color.fromARGB(255, 70, 51, 43).withOpacity(0.4),
+                  color: Color.fromARGB(255, 70, 51, 43).withValues(alpha: 0.4),
                   blurRadius: 8,
                   spreadRadius: 1,
                   offset: Offset(0, 3),
@@ -876,7 +470,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ]
             : [
                 BoxShadow(
-                  color: Colors.grey.withOpacity(0.2),
+                  color: Colors.grey.withValues(alpha: 0.2),
                   blurRadius: 4,
                   spreadRadius: 0,
                   offset: Offset(0, 2),
@@ -884,7 +478,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
         border: isToday
             ? null
-            : Border.all(color: Colors.grey.withOpacity(0.3), width: 1),
+            : Border.all(color: Colors.grey.withValues(alpha: 0.3), width: 1),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -912,10 +506,10 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildNavigation() {
+  Widget _buildNavigation(int currentIndex) {
     return CrystalNavigationBar(
       onTap: (index) {
-        setState(() => currentIndex = index);
+        ref.read(navigationIndexProvider.notifier).state = index;
         Navigator.push(
           context,
           MaterialPageRoute(

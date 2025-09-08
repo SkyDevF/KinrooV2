@@ -1,25 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../providers/auth_provider.dart';
 import 'register_screen.dart';
 import 'home_screen.dart';
 import 'forgot_password_screen.dart';
 import 'input_birthday_screen.dart';
 import 'google_register_screen.dart';
 
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   String errorMessage = '';
   bool _obscureText = true;
@@ -28,27 +28,28 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _signIn() async {
     if (emailController.text.trim().isEmpty ||
         passwordController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("กรุณากรอกอีเมลและรหัสผ่าน")));
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("กรุณากรอกอีเมลและรหัสผ่าน")));
+      }
       return;
     }
 
     setState(() => _isLoggingIn = true);
 
     try {
-      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
-        email: emailController.text.trim(),
-        password: passwordController.text.trim(),
-      );
+      final authService = ref.read(authServiceProvider);
+      UserCredential userCredential = await authService
+          .signInWithEmailAndPassword(
+            emailController.text.trim(),
+            passwordController.text.trim(),
+          );
 
       User? user = userCredential.user;
       if (user == null) throw Exception("เข้าสู่ระบบไม่สำเร็จ");
 
-      DocumentSnapshot userDoc = await _firestore
-          .collection("users")
-          .doc(user.uid)
-          .get();
+      DocumentSnapshot userDoc = await authService.getUserDocument(user.uid);
 
       if (!mounted) return;
       Navigator.pushReplacement(
@@ -59,11 +60,15 @@ class _LoginScreenState extends State<LoginScreen> {
       );
     } catch (e) {
       setState(() => errorMessage = "เข้าสู่ระบบไม่สำเร็จ: ${e.toString()}");
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(errorMessage)));
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(errorMessage)));
+      }
     } finally {
-      setState(() => _isLoggingIn = false);
+      if (mounted) {
+        setState(() => _isLoggingIn = false);
+      }
     }
   }
 
