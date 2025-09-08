@@ -19,9 +19,11 @@ class _ScanFoodScreenState extends State<ScanFoodScreen>
     with TickerProviderStateMixin {
   XFile? _image;
   Interpreter? _interpreter;
-  TextEditingController _foodController = TextEditingController();
+  final TextEditingController _foodController = TextEditingController();
   double calories = 0, protein = 0, fat = 0, carbs = 0;
+  double confidence = 0.0; // เพิ่มตัวแปรเก็บค่าความถูกต้อง
   bool _isLoading = false;
+  bool _isManuallyEdited = false; // ตรวจสอบว่าผู้ใช้แก้ไขชื่ออาหารแล้วหรือไม่
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
 
@@ -98,7 +100,12 @@ class _ScanFoodScreenState extends State<ScanFoodScreen>
     _interpreter!.run(input, output);
 
     setState(() {
-      String predictedFood = _mapFoodLabel(output[0]);
+      // คำนวณค่าความถูกต้องและชื่ออาหาร
+      final result = _mapFoodLabelWithConfidence(output[0]);
+      String predictedFood = result['food'];
+      confidence = result['confidence'];
+      _isManuallyEdited = false; // รีเซ็ตสถานะการแก้ไข
+
       _foodController.text = predictedFood;
       _getNutritionData(predictedFood);
     });
@@ -216,15 +223,15 @@ class _ScanFoodScreenState extends State<ScanFoodScreen>
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: backgroundColor != null
-              ? [backgroundColor, backgroundColor.withOpacity(0.8)]
-              : [primaryBlue, primaryBlue.withOpacity(0.8)],
+              ? [backgroundColor, backgroundColor.withValues(alpha: 0.8)]
+              : [primaryBlue, primaryBlue.withValues(alpha: 0.8)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(15),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withValues(alpha: 0.2),
             blurRadius: 8,
             offset: Offset(0, 4),
           ),
@@ -271,7 +278,7 @@ class _ScanFoodScreenState extends State<ScanFoodScreen>
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 6,
             offset: Offset(0, 2),
           ),
@@ -282,7 +289,7 @@ class _ScanFoodScreenState extends State<ScanFoodScreen>
           Container(
             padding: EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, color: color, size: 24),
@@ -380,7 +387,7 @@ class _ScanFoodScreenState extends State<ScanFoodScreen>
                   "ถ่ายรูปหรือเลือกรูปอาหารเพื่อวิเคราะห์",
                   style: TextStyle(
                     fontSize: 16,
-                    color: Colors.white.withOpacity(0.9),
+                    color: Colors.white.withValues(alpha: 0.9),
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -426,7 +433,7 @@ class _ScanFoodScreenState extends State<ScanFoodScreen>
               borderRadius: BorderRadius.circular(15),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: Colors.black.withValues(alpha: 0.1),
                   blurRadius: 10,
                   offset: Offset(0, 4),
                 ),
@@ -466,7 +473,7 @@ class _ScanFoodScreenState extends State<ScanFoodScreen>
                     );
                   },
                   child: CircleAvatar(
-                    backgroundColor: primaryBlue.withOpacity(0.1),
+                    backgroundColor: primaryBlue.withValues(alpha: 0.1),
                     radius: 24,
                     child: Icon(
                       Icons.info_outline,
@@ -486,7 +493,7 @@ class _ScanFoodScreenState extends State<ScanFoodScreen>
                 ),
                 SizedBox(height: 8),
                 Text(
-                  "1. ถ่ายรูปหรือเลือกรูปอาหาร\n2. รอระบบวิเคราะห์\n3. ตรวจสอบและแก้ไขชื่ออาหาร\n4. บันทึกข้อมูลโภชนาการ",
+                  "1. ถ่ายรูปหรือเลือกรูปอาหาร\n2. รอระบบวิเคราะห์\n3. ตรวจสอบค่าความถูกต้อง\n4. แก้ไขชื่ออาหารหากจำเป็น\n5. บันทึกข้อมูลโภชนาการ\n\n💡 เคล็ดลับ: ถ่ายรูปให้ชัดเจน ไม่มีสิ่งกีดขวาง เพื่อความแม่นยำสูงสุด",
                   style: TextStyle(
                     fontSize: 14,
                     color: Colors.grey[600],
@@ -538,7 +545,7 @@ class _ScanFoodScreenState extends State<ScanFoodScreen>
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.2),
+                  color: Colors.black.withValues(alpha: 0.2),
                   blurRadius: 15,
                   offset: Offset(0, 8),
                 ),
@@ -552,6 +559,111 @@ class _ScanFoodScreenState extends State<ScanFoodScreen>
 
           SizedBox(height: 25),
 
+          // Confidence indicator
+          Container(
+            padding: EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(15),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 10,
+                  offset: Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      confidence >= 70 ? Icons.check_circle : Icons.warning,
+                      color: confidence >= 70 ? Colors.green : Colors.orange,
+                      size: 24,
+                    ),
+                    SizedBox(width: 8),
+                    Text(
+                      "ความถูกต้อง",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: primaryBrown,
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: LinearProgressIndicator(
+                        value: confidence / 100,
+                        backgroundColor: Colors.grey[300],
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          confidence >= 70
+                              ? Colors.green
+                              : confidence >= 50
+                              ? Colors.orange
+                              : Colors.red,
+                        ),
+                        minHeight: 8,
+                      ),
+                    ),
+                    SizedBox(width: 12),
+                    Text(
+                      "${confidence.toInt()}%",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: confidence >= 70
+                            ? Colors.green
+                            : confidence >= 50
+                            ? Colors.orange
+                            : Colors.red,
+                      ),
+                    ),
+                  ],
+                ),
+                if (confidence < 70) ...[
+                  SizedBox(height: 12),
+                  Container(
+                    padding: EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.orange[50],
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.orange[200]!),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.info_outline,
+                          color: Colors.orange[700],
+                          size: 20,
+                        ),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            confidence < 50
+                                ? "ความถูกต้องต่ำ กรุณาตรวจสอบและแก้ไขชื่ออาหารด้านล่าง"
+                                : "ความถูกต้องปานกลาง แนะนำให้ตรวจสอบชื่ออาหาร",
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.orange[700],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+
+          SizedBox(height: 20),
+
           // Food name input
           Container(
             padding: EdgeInsets.all(20),
@@ -560,7 +672,7 @@ class _ScanFoodScreenState extends State<ScanFoodScreen>
               borderRadius: BorderRadius.circular(15),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: Colors.black.withValues(alpha: 0.1),
                   blurRadius: 10,
                   offset: Offset(0, 4),
                 ),
@@ -586,7 +698,7 @@ class _ScanFoodScreenState extends State<ScanFoodScreen>
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide(
-                        color: primaryBlue.withOpacity(0.3),
+                        color: primaryBlue.withValues(alpha: 0.3),
                       ),
                     ),
                     focusedBorder: OutlineInputBorder(
@@ -598,11 +710,45 @@ class _ScanFoodScreenState extends State<ScanFoodScreen>
                     fillColor: Colors.grey[50],
                   ),
                   onChanged: (value) => setState(() {
-                    _getNutritionData(
-                      value,
-                    ); // Update nutrition data when food name changes
+                    _isManuallyEdited = true; // ผู้ใช้แก้ไขชื่ออาหารแล้ว
+                    _getNutritionData(value); // อัปเดตข้อมูลโภชนาการ
                   }),
                 ),
+                SizedBox(height: 8),
+                if (_isManuallyEdited)
+                  Container(
+                    padding: EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.green[50],
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: Colors.green[200]!),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.edit, color: Colors.green[700], size: 16),
+                        SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            "ชื่ออาหารถูกแก้ไขแล้ว",
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.green[700],
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                else
+                  Text(
+                    "💡 หากชื่ออาหารไม่ถูกต้อง สามารถแก้ไขได้ที่ช่องด้านบน",
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[600],
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
               ],
             ),
           ),
@@ -657,6 +803,17 @@ class _ScanFoodScreenState extends State<ScanFoodScreen>
 
           SizedBox(height: 30),
 
+          // Action buttons based on confidence
+          if (confidence < 50) ...[
+            _buildGradientButton(
+              text: "ถ่ายรูปใหม่",
+              icon: Icons.camera_alt,
+              onPressed: () => _pickImage(ImageSource.camera),
+              backgroundColor: Colors.orange,
+            ),
+            SizedBox(height: 10),
+          ],
+
           // Save button
           _buildGradientButton(
             text: "บันทึกข้อมูล",
@@ -697,7 +854,7 @@ List<List<List<List<double>>>> _processImage(XFile image) {
   return input;
 }
 
-String _mapFoodLabel(List<double> predictions) {
+Map<String, dynamic> _mapFoodLabelWithConfidence(List<double> predictions) {
   final foodLabels = [
     "กระเพราหมูสับ",
     "กระเพราเนื้อเปื่อย",
@@ -751,12 +908,23 @@ String _mapFoodLabel(List<double> predictions) {
     "ไส้กรอกอีสาน",
   ];
 
-  int predictedIndex = predictions.indexOf(
-    predictions.reduce((a, b) => a > b ? a : b),
-  );
-  return (predictedIndex >= 0 && predictedIndex < foodLabels.length)
+  // หาค่าสูงสุดและ index
+  double maxValue = predictions.reduce((a, b) => a > b ? a : b);
+  int predictedIndex = predictions.indexOf(maxValue);
+
+  // คำนวณ confidence เป็นเปอร์เซ็นต์
+  double confidenceValue = maxValue * 100;
+
+  String foodName = (predictedIndex >= 0 && predictedIndex < foodLabels.length)
       ? foodLabels[predictedIndex]
       : "อาหารไม่รู้จัก";
+
+  return {'food': foodName, 'confidence': confidenceValue};
+}
+
+String _mapFoodLabel(List<double> predictions) {
+  final result = _mapFoodLabelWithConfidence(predictions);
+  return result['food'];
 }
 
 String getCurrentUserId() {
