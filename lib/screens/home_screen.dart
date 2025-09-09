@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/user_provider.dart';
@@ -20,6 +21,9 @@ class HomeScreen extends ConsumerStatefulWidget {
 // This widget serves as the main home screen of the app, displaying user health data, food history, and navigation options.
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   double startWeight = 75.0;
+  PageController _pageController = PageController();
+  Timer? _autoScrollTimer;
+  int _currentFoodIndex = 0;
 
   final thaiWeekDays = {
     1: "จ.",
@@ -35,6 +39,30 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   void initState() {
     super.initState();
     _checkForNewDay();
+    _startAutoScroll();
+  }
+
+  @override
+  void dispose() {
+    _autoScrollTimer?.cancel();
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  void _startAutoScroll() {
+    _autoScrollTimer = Timer.periodic(Duration(seconds: 3), (timer) {
+      final recommendedFood = ref.read(recommendedFoodProvider);
+      if (recommendedFood.isNotEmpty) {
+        _currentFoodIndex = (_currentFoodIndex + 1) % recommendedFood.length;
+        if (_pageController.hasClients) {
+          _pageController.animateToPage(
+            _currentFoodIndex,
+            duration: Duration(milliseconds: 500),
+            curve: Curves.easeInOut,
+          );
+        }
+      }
+    });
   }
 
   void _checkForNewDay() async {
@@ -210,28 +238,48 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget _buildFoodRecommendation(double bmi) {
     final recommendedFood = ref.watch(recommendedFoodProvider);
 
-    return _buildContainer(
+    return Container(
+      margin: EdgeInsets.all(25),
+      padding: EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(30),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             "แนะนำเมนูอาหาร",
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
           ),
-          SizedBox(height: 15),
+          SizedBox(height: 10),
           Container(
             height: 200,
             child: recommendedFood.isEmpty
-                ? Center(child: Text("ไม่พบเมนูที่เหมาะสมกับสุขภาพของคุณ"))
-                : ListView.builder(
-                    scrollDirection: Axis.horizontal,
+                ? Center(
+                    child: Text(
+                      "ไม่พบเมนูที่เหมาะสมกับสุขภาพของคุณ",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  )
+                : PageView.builder(
+                    controller: _pageController,
                     itemCount: recommendedFood.length,
+                    onPageChanged: (index) {
+                      setState(() {
+                        _currentFoodIndex = index;
+                      });
+                    },
                     itemBuilder: (ctx, index) {
                       final item = recommendedFood[index];
 
                       return Container(
-                        width: 150,
-                        margin: EdgeInsets.only(right: 15),
+                        width: double.infinity,
+                        margin: EdgeInsets.symmetric(horizontal: 5),
                         child: Column(
                           children: [
                             ClipRRect(
@@ -239,19 +287,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               child: item.image.startsWith("assets/")
                                   ? Image.asset(
                                       item.image,
-                                      width: 150,
-                                      height: 130,
+                                      width: double.infinity,
+                                      height: 150,
                                       fit: BoxFit.cover,
                                     )
                                   : Image.network(
                                       item.image,
-                                      width: 150,
+                                      width: double.infinity,
                                       height: 130,
                                       fit: BoxFit.cover,
                                       loadingBuilder: (c, child, progress) {
                                         if (progress == null) return child;
                                         return Container(
-                                          width: 150,
+                                          width: double.infinity,
                                           height: 130,
                                           child: Center(
                                             child: CircularProgressIndicator(),
@@ -259,7 +307,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                         );
                                       },
                                       errorBuilder: (_, __, ___) => Container(
-                                        width: 150,
+                                        width: double.infinity,
                                         height: 130,
                                         decoration: BoxDecoration(
                                           color: Colors.grey[300],
@@ -281,6 +329,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.bold,
+                                color: Colors.white,
                               ),
                               textAlign: TextAlign.center,
                             ),
@@ -288,7 +337,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               "${item.calories} kcal",
                               style: TextStyle(
                                 fontSize: 12,
-                                color: Colors.grey[600],
+                                color: Colors.white70,
                               ),
                             ),
                           ],
@@ -297,6 +346,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     },
                   ),
           ),
+          if (recommendedFood.isNotEmpty)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(
+                recommendedFood.length,
+                (index) => Container(
+                  width: 8,
+                  height: 8,
+                  margin: EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: _currentFoodIndex == index
+                        ? Colors.white
+                        : Colors.white.withOpacity(0.4),
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );
