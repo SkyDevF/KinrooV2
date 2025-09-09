@@ -70,8 +70,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 bmiImage,
                 foodHistoryAsync,
               ),
-              _buildWeightGoal(userProfile),
               _buildFoodRecommendation(bmi),
+              _buildWeightGoal(userProfile),
             ],
           ),
         ),
@@ -207,92 +207,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildWeightGoal(UserProfile? userProfile) {
-    if (userProfile == null) return SizedBox.shrink();
-
-    double? progressValue = 0;
-    if (startWeight != 0 &&
-        userProfile.targetWeight != 0 &&
-        userProfile.weight != 0) {
-      double totalDiff = (userProfile.targetWeight - startWeight)
-          .abs()
-          .toDouble();
-      double currentDiff = (userProfile.weight - userProfile.targetWeight)
-          .abs()
-          .toDouble();
-      progressValue = (totalDiff == 0 ? 1.0 : (1.0 - (currentDiff / totalDiff)))
-          .clamp(0.0, 1.0);
-    }
-    int percentage = (progressValue * 100).round();
-
-    return _buildContainer(
-      child: Stack(
-        children: [
-          // กล่องเนื้อหาเป้าหมายน้ำหนัก
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                "เป้าหมายน้ำหนัก",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 10),
-              Text(
-                "ปัจจุบัน: ${userProfile.weight.toStringAsFixed(1)} kg",
-                style: TextStyle(fontSize: 14),
-              ),
-              Text(
-                "เป้าหมาย: ${userProfile.targetWeight.toStringAsFixed(1)} kg",
-                style: TextStyle(fontSize: 14),
-              ),
-              SizedBox(height: 15),
-              _buildProgressBar(
-                progressValue,
-                color: percentage >= 100
-                    ? Colors.green
-                    : Color.fromARGB(255, 70, 51, 43),
-              ),
-              SizedBox(height: 10),
-              Text(
-                "$percentage% สำเร็จ",
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: percentage >= 100 ? Colors.green : Colors.black,
-                ),
-              ),
-            ],
-          ),
-
-          // ปุ่มอัปเดตน้ำหนัก (มุมขวาบน)
-          Positioned(
-            top: 0,
-            right: 0,
-            child: TextButton(
-              style: TextButton.styleFrom(
-                backgroundColor: Color.fromARGB(255, 70, 51, 43), // สี brown
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              ),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => UpdateWeightScreen()),
-                );
-              },
-              child: Text(
-                "อัปเดต",
-                style: TextStyle(color: Colors.white, fontSize: 12),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildFoodRecommendation(double bmi) {
     final recommendedFood = ref.watch(recommendedFoodProvider);
 
@@ -382,6 +296,92 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       );
                     },
                   ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWeightGoal(UserProfile? userProfile) {
+    if (userProfile == null) return SizedBox.shrink();
+
+    double? progressValue = 0;
+    if (startWeight != 0 &&
+        userProfile.targetWeight != 0 &&
+        userProfile.weight != 0) {
+      double totalDiff = (userProfile.targetWeight - startWeight)
+          .abs()
+          .toDouble();
+      double currentDiff = (userProfile.weight - userProfile.targetWeight)
+          .abs()
+          .toDouble();
+      progressValue = (totalDiff == 0 ? 1.0 : (1.0 - (currentDiff / totalDiff)))
+          .clamp(0.0, 1.0);
+    }
+    int percentage = (progressValue * 100).round();
+
+    return _buildContainer(
+      child: Stack(
+        children: [
+          // กล่องเนื้อหาเป้าหมายน้ำหนัก
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "เป้าหมายน้ำหนัก",
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 10),
+              Text(
+                "ปัจจุบัน: ${userProfile.weight.toStringAsFixed(1)} kg",
+                style: TextStyle(fontSize: 14),
+              ),
+              Text(
+                "เป้าหมาย: ${userProfile.targetWeight.toStringAsFixed(1)} kg",
+                style: TextStyle(fontSize: 14),
+              ),
+              SizedBox(height: 15),
+              _buildProgressBar(
+                progressValue,
+                color: percentage >= 100
+                    ? Colors.green
+                    : Color.fromARGB(255, 70, 51, 43),
+              ),
+              SizedBox(height: 10),
+              Text(
+                "$percentage% สำเร็จ",
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: percentage >= 100 ? Colors.green : Colors.black,
+                ),
+              ),
+            ],
+          ),
+
+          // ปุ่มอัปเดตน้ำหนัก (มุมขวาบน)
+          Positioned(
+            top: 0,
+            right: 0,
+            child: TextButton(
+              style: TextButton.styleFrom(
+                backgroundColor: Color.fromARGB(255, 70, 51, 43), // สี brown
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              ),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => UpdateWeightScreen()),
+                );
+              },
+              child: Text(
+                "อัปเดต",
+                style: TextStyle(color: Colors.white, fontSize: 12),
+              ),
+            ),
           ),
         ],
       ),
