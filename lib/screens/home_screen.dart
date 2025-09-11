@@ -256,9 +256,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               color: Colors.white,
             ),
           ),
-          SizedBox(height: 10),
+          SizedBox(height: 15),
           Container(
-            height: 200,
+            height: 170,
             child: recommendedFood.isEmpty
                 ? Center(
                     child: Text(
@@ -288,7 +288,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   ? Image.asset(
                                       item.image,
                                       width: double.infinity,
-                                      height: 150,
+                                      height: 110,
                                       fit: BoxFit.cover,
                                     )
                                   : Image.network(
