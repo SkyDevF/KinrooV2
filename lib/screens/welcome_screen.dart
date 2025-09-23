@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'login_screen.dart';
 import 'register_screen.dart';
 import 'input_birthday_screen.dart';
@@ -22,10 +23,16 @@ class WelcomeScreen extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 SizedBox(height: 350), // ✅ เว้นระยะด้านบนให้พอดีกับ UI
-                
+
                 _buildButton(context, "ล็อกอิน", Colors.black, LoginScreen()),
                 SizedBox(height: 15),
-                _buildButton(context, "สร้างบัญชี", Colors.white, RegisterScreen(), textColor: Colors.black),
+                _buildButton(
+                  context,
+                  "สร้างบัญชี",
+                  Colors.white,
+                  RegisterScreen(),
+                  textColor: Colors.black,
+                ),
                 SizedBox(height: 25),
 
                 _buildTrialAccount(context),
@@ -37,7 +44,13 @@ class WelcomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildButton(BuildContext context, String label, Color color, Widget screen, {Color textColor = Colors.white}) {
+  Widget _buildButton(
+    BuildContext context,
+    String label,
+    Color color,
+    Widget screen, {
+    Color textColor = Colors.white,
+  }) {
     return SizedBox(
       width: 350,
       height: 60,
@@ -46,7 +59,8 @@ class WelcomeScreen extends StatelessWidget {
           backgroundColor: color,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
-        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => screen)),
+        onPressed: () =>
+            Navigator.push(context, MaterialPageRoute(builder: (_) => screen)),
         child: Text(label, style: TextStyle(fontSize: 18, color: textColor)),
       ),
     );
@@ -54,14 +68,66 @@ class WelcomeScreen extends StatelessWidget {
 
   Widget _buildTrialAccount(BuildContext context) {
     return GestureDetector(
-      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => InputBirthdayScreen())),
+      onTap: () => _signInAnonymously(context),
       child: Column(
         children: [
-          Text("กดใช้งาน บัญชีทดลอง", style: TextStyle(fontSize: 16, color: Colors.white)),
+          Text(
+            "กดใช้งาน บัญชีทดลอง",
+            style: TextStyle(fontSize: 16, color: Colors.white),
+          ),
           SizedBox(height: 3),
           Container(width: 200, height: 2, color: Colors.white),
         ],
       ),
     );
+  }
+
+  // ✅ ฟังก์ชันสำหรับล็อกอินแบบไม่ระบุตัวตน
+  Future<void> _signInAnonymously(BuildContext context) async {
+    try {
+      print("🔄 เริ่มต้นล็อกอินแบบไม่ระบุตัวตน...");
+
+      // แสดง loading
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) =>
+            Center(child: CircularProgressIndicator(color: Colors.white)),
+      );
+
+      // ล็อกอินแบบไม่ระบุตัวตน
+      UserCredential userCredential = await FirebaseAuth.instance
+          .signInAnonymously();
+      print("✅ ล็อกอินสำเร็จ: ${userCredential.user?.uid}");
+
+      // ตรวจสอบว่า context ยังใช้ได้หรือไม่
+      if (!context.mounted) return;
+
+      // ปิด loading dialog
+      Navigator.pop(context);
+
+      // ไปหน้าใส่ข้อมูลวันเกิด
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => InputBirthdayScreen()),
+      );
+    } catch (e) {
+      print("❌ ข้อผิดพลาดในการล็อกอิน: $e");
+
+      // ตรวจสอบว่า context ยังใช้ได้หรือไม่
+      if (!context.mounted) return;
+
+      // ปิด loading dialog
+      Navigator.pop(context);
+
+      // แสดงข้อผิดพลาดที่ละเอียดขึ้น
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("เกิดข้อผิดพลาด: ${e.toString()}"),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 5),
+        ),
+      );
+    }
   }
 }

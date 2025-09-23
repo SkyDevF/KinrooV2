@@ -18,12 +18,15 @@ class _InputBirthdayScreenState extends State<InputBirthdayScreen> {
   bool _isSaving = false; // ✅ ตรวจสอบสถานะการบันทึกข้อมูล
 
   bool isFilled() {
-    return nameController.text.trim().isNotEmpty && ageController.text.trim().isNotEmpty;
+    return nameController.text.trim().isNotEmpty &&
+        ageController.text.trim().isNotEmpty;
   }
 
   Future<void> _saveData() async {
     if (!isFilled()) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("กรุณากรอกข้อมูลให้ครบ!")));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("กรุณากรอกข้อมูลให้ครบ!")));
       return;
     }
 
@@ -32,19 +35,29 @@ class _InputBirthdayScreenState extends State<InputBirthdayScreen> {
     try {
       User? user = _auth.currentUser;
       if (user == null) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("ไม่พบผู้ใช้ กรุณาล็อกอินใหม่!")));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("ไม่พบผู้ใช้ กรุณาล็อกอินใหม่!")),
+        );
         return;
       }
 
+      // ✅ บันทึกข้อมูลพร้อมระบุว่าเป็นบัญชีทดลอง
       await _firestore.collection("users").doc(user.uid).set({
         "name": nameController.text.trim(),
         "age": ageController.text.trim(),
+        "isTrialAccount": user.isAnonymous, // ✅ ระบุว่าเป็นบัญชีทดลองหรือไม่
+        "createdAt": FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
 
       if (!mounted) return; // ✅ ป้องกันปัญหาหลังจาก state ถูก Dispose
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => InputWeightHeightScreen()));
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => InputWeightHeightScreen()),
+      );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("เกิดข้อผิดพลาด กรุณาลองใหม่!")));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("เกิดข้อผิดพลาด กรุณาลองใหม่!")));
     } finally {
       setState(() => _isSaving = false); // ✅ ซ่อนสถานะการบันทึกข้อมูล
     }
@@ -60,8 +73,12 @@ class _InputBirthdayScreenState extends State<InputBirthdayScreen> {
         title: Image.asset('assets/icon/logo.png', width: 150, height: 100),
         leading: Container(
           margin: EdgeInsets.all(8),
-          width: 50, height: 50,
-          decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(10)),
+          width: 50,
+          height: 50,
+          decoration: BoxDecoration(
+            color: Colors.grey[300],
+            borderRadius: BorderRadius.circular(10),
+          ),
           child: IconButton(
             icon: Icon(Icons.arrow_back, size: 28, color: Colors.black),
             onPressed: () => Navigator.pop(context),
@@ -80,21 +97,35 @@ class _InputBirthdayScreenState extends State<InputBirthdayScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text("ระบุวันเกิดของคุณ", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.blue[900])),
+              Text(
+                "ระบุวันเกิดของคุณ",
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blue[900],
+                ),
+              ),
               SizedBox(height: 8),
               Text(
                 "ระบุอายุของคุณเพื่อปรับค่าทางโภชนาการให้เหมาะสมตามความต้องการของคุณ",
-                textAlign: TextAlign.center, style: TextStyle(fontSize: 16, color: Colors.grey),
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 16, color: Colors.grey),
               ),
               SizedBox(height: 20),
 
               // ✅ ช่องกรอกชื่อ
               Container(
                 padding: EdgeInsets.all(8),
-                decoration: BoxDecoration(borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.grey)),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey),
+                ),
                 child: TextField(
                   controller: nameController,
-                  decoration: InputDecoration(border: InputBorder.none, hintText: "ระบุชื่อของคุณ"),
+                  decoration: InputDecoration(
+                    border: InputBorder.none,
+                    hintText: "ระบุชื่อของคุณ",
+                  ),
                 ),
               ),
               SizedBox(height: 15),
@@ -102,22 +133,36 @@ class _InputBirthdayScreenState extends State<InputBirthdayScreen> {
               // ✅ ช่องกรอกอายุ
               Container(
                 padding: EdgeInsets.all(8),
-                decoration: BoxDecoration(borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.grey)),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey),
+                ),
                 child: TextField(
                   controller: ageController,
                   keyboardType: TextInputType.number,
-                  decoration: InputDecoration(border: InputBorder.none, hintText: "อายุของคุณคือ"),
+                  decoration: InputDecoration(
+                    border: InputBorder.none,
+                    hintText: "อายุของคุณคือ",
+                  ),
                 ),
               ),
               SizedBox(height: 20),
 
               // ✅ ปุ่มถัดไปสีเทาอ่อน พร้อมแสดงสถานะกำลังบันทึก
               ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: Color.fromARGB(255, 47, 130, 174), padding: EdgeInsets.symmetric(vertical: 12, horizontal: 100)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color.fromARGB(255, 47, 130, 174),
+                  padding: EdgeInsets.symmetric(vertical: 12, horizontal: 100),
+                ),
                 onPressed: _isSaving ? null : _saveData,
                 child: _isSaving
-                    ? CircularProgressIndicator(color: Colors.white) // ✅ แสดงโหลดข้อมูลเมื่อกำลังบันทึก
-                    : Text("ถัดไป", style: TextStyle(fontSize: 18, color: Colors.white)),
+                    ? CircularProgressIndicator(
+                        color: Colors.white,
+                      ) // ✅ แสดงโหลดข้อมูลเมื่อกำลังบันทึก
+                    : Text(
+                        "ถัดไป",
+                        style: TextStyle(fontSize: 18, color: Colors.white),
+                      ),
               ),
             ],
           ),

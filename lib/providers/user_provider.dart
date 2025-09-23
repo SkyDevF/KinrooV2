@@ -24,9 +24,14 @@ class UserProfile {
 
   factory UserProfile.fromFirestore(DocumentSnapshot doc, String email) {
     final data = doc.data() as Map<String, dynamic>? ?? {};
+
+    // ✅ ถ้าเป็นบัญชีทดลอง ให้ใช้ชื่อจากข้อมูลที่บันทึกไว้
+    String displayName = data['name'] ?? 'ผู้ใช้ทดลอง';
+    String displayEmail = email.isEmpty ? 'บัญชีทดลอง' : email;
+
     return UserProfile(
-      name: data['name'] ?? 'ไม่พบข้อมูล',
-      email: email,
+      name: displayName,
+      email: displayEmail,
       gender: data['gender'] ?? '',
       weight: double.tryParse(data['weight'].toString()) ?? 0.0,
       height: double.tryParse(data['height'].toString()) ?? 0.0,
@@ -129,7 +134,7 @@ final bmiImageProvider = Provider<String>((ref) {
   } else if (bmi <= 30) {
     range = "25-30";
   } else if (bmi <= 39.5) {
-   range = "35-39.5";
+    range = "35-39.5";
   } else {
     range = "40";
   }

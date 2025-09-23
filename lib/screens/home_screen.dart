@@ -5,6 +5,7 @@ import '../providers/user_provider.dart';
 import '../providers/food_provider.dart';
 import '../providers/navigation_provider.dart';
 import '../providers/food_menu_provider.dart';
+import '../providers/auth_provider.dart';
 import 'profile_screen.dart';
 import 'food_history_screen.dart';
 import 'scan_food_screen.dart';
@@ -456,6 +457,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildHeader() {
+    final authService = ref.watch(authServiceProvider);
+    final isTrialAccount = authService.isAnonymousUser();
+
     return Container(
       padding: EdgeInsets.symmetric(vertical: 15, horizontal: 20),
       color: Color.fromARGB(255, 70, 51, 43),
@@ -469,6 +473,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               MaterialPageRoute(builder: (_) => ProfileScreen()),
             ),
           ),
+          // ✅ แสดงสถานะบัญชีทดลอง
+          if (isTrialAccount)
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.orange,
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: Text(
+                "บัญชีทดลอง",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
         ],
       ),
     );

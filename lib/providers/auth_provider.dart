@@ -59,6 +59,16 @@ class AuthService {
     );
   }
 
+  // ✅ เพิ่มฟังก์ชันสำหรับบัญชีทดลอง (Anonymous Authentication)
+  Future<UserCredential> signInAnonymously() async {
+    return await _auth.signInAnonymously();
+  }
+
+  // ✅ ตรวจสอบว่าเป็นบัญชีทดลองหรือไม่
+  bool isAnonymousUser() {
+    return _auth.currentUser?.isAnonymous ?? false;
+  }
+
   Future<void> signOut() async {
     await _auth.signOut();
   }

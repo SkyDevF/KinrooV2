@@ -58,10 +58,44 @@ class ProfileScreen extends ConsumerWidget {
       );
     }
 
+    final authService = ref.watch(authServiceProvider);
+    final isTrialAccount = authService.isAnonymousUser();
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          // ✅ แสดงแจ้งเตือนสำหรับบัญชีทดลอง
+          if (isTrialAccount)
+            Container(
+              margin: EdgeInsets.all(20),
+              padding: EdgeInsets.all(15),
+              decoration: BoxDecoration(
+                color: Colors.orange,
+                borderRadius: BorderRadius.circular(10),
+                boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 5)],
+              ),
+              child: Column(
+                children: [
+                  Icon(Icons.warning, color: Colors.white, size: 30),
+                  SizedBox(height: 10),
+                  Text(
+                    "คุณกำลังใช้บัญชีทดลอง",
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  Text(
+                    "ข้อมูลจะหายหากลบแอปและโหลดใหม่",
+                    style: TextStyle(fontSize: 14, color: Colors.white),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+
           Image.asset(
             'assets/icon/sum.png',
             width: 200,
@@ -116,7 +150,7 @@ class ProfileScreen extends ConsumerWidget {
               backgroundColor: Color.fromARGB(255, 70, 51, 43),
             ),
             onPressed: () async {
-              final result = await Navigator.push(
+              await Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => EditProfileScreen()),
               );
@@ -142,7 +176,7 @@ class ProfileScreen extends ConsumerWidget {
               }
             },
             child: Text(
-              "ล็อกเอาท์",
+              isTrialAccount ? "ออกจากบัญชีทดลอง" : "ล็อกเอาท์",
               style: TextStyle(
                 color: Color.fromARGB(255, 70, 51, 43),
                 fontSize: 18,
