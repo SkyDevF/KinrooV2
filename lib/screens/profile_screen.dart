@@ -62,129 +62,134 @@ class ProfileScreen extends ConsumerWidget {
     final isTrialAccount = authService.isAnonymousUser();
 
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // ✅ แสดงแจ้งเตือนสำหรับบัญชีทดลอง
-          if (isTrialAccount)
-            Container(
-              margin: EdgeInsets.all(20),
-              padding: EdgeInsets.all(15),
-              decoration: BoxDecoration(
-                color: Colors.orange,
-                borderRadius: BorderRadius.circular(10),
-                boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 5)],
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 20),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // ✅ แสดงแจ้งเตือนสำหรับบัญชีทดลอง
+              if (isTrialAccount)
+                Container(
+                  margin: EdgeInsets.all(20),
+                  padding: EdgeInsets.all(15),
+                  decoration: BoxDecoration(
+                    color: Colors.orange,
+                    borderRadius: BorderRadius.circular(10),
+                    boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 5)],
+                  ),
+                  child: Column(
+                    children: [
+                      Icon(Icons.warning, color: Colors.white, size: 30),
+                      SizedBox(height: 10),
+                      Text(
+                        "คุณกำลังใช้บัญชีทดลอง",
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      Text(
+                        "ข้อมูลจะหายหากลบแอปและโหลดใหม่",
+                        style: TextStyle(fontSize: 14, color: Colors.white),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
+      
+              Image.asset(
+                'assets/icon/sum.png',
+                width: 200,
+                height: 200,
+                fit: BoxFit.cover,
               ),
-              child: Column(
-                children: [
-                  Icon(Icons.warning, color: Colors.white, size: 30),
-                  SizedBox(height: 10),
-                  Text(
-                    "คุณกำลังใช้บัญชีทดลอง",
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+              SizedBox(height: 20),
+      
+              Text(
+                userProfile.name,
+                style: TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.brown[800],
+                ),
+              ),
+              Text(
+                userProfile.email,
+                style: TextStyle(fontSize: 16, color: Colors.grey[700]),
+              ),
+              SizedBox(height: 30),
+      
+              Container(
+                padding: EdgeInsets.all(20),
+                width: 300,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(15),
+                  boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 5)],
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      "น้ำหนัก: ${userProfile.weight.toStringAsFixed(1)} กก.",
+                      style: TextStyle(fontSize: 18),
                     ),
-                  ),
-                  Text(
-                    "ข้อมูลจะหายหากลบแอปและโหลดใหม่",
-                    style: TextStyle(fontSize: 14, color: Colors.white),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
+                    Text(
+                      "ส่วนสูง: ${userProfile.height.toStringAsFixed(1)} ซม.",
+                      style: TextStyle(fontSize: 18),
+                    ),
+                    Text(
+                      "เป้าหมายน้ำหนัก: ${userProfile.targetWeight.toStringAsFixed(1)} กก.",
+                      style: TextStyle(fontSize: 18),
+                    ),
+                  ],
+                ),
               ),
-            ),
-
-          Image.asset(
-            'assets/icon/sum.png',
-            width: 200,
-            height: 200,
-            fit: BoxFit.cover,
-          ),
-          SizedBox(height: 20),
-
-          Text(
-            userProfile.name,
-            style: TextStyle(
-              fontSize: 26,
-              fontWeight: FontWeight.bold,
-              color: Colors.brown[800],
-            ),
-          ),
-          Text(
-            userProfile.email,
-            style: TextStyle(fontSize: 16, color: Colors.grey[700]),
-          ),
-          SizedBox(height: 30),
-
-          Container(
-            padding: EdgeInsets.all(20),
-            width: 300,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(15),
-              boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 5)],
-            ),
-            child: Column(
-              children: [
-                Text(
-                  "น้ำหนัก: ${userProfile.weight.toStringAsFixed(1)} กก.",
-                  style: TextStyle(fontSize: 18),
+              SizedBox(height: 40),
+      
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color.fromARGB(255, 70, 51, 43),
                 ),
-                Text(
-                  "ส่วนสูง: ${userProfile.height.toStringAsFixed(1)} ซม.",
-                  style: TextStyle(fontSize: 18),
+                onPressed: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => EditProfileScreen()),
+                  );
+                  // ข้อมูลจะอัปเดตอัตโนมัติผ่าน Stream
+                },
+                child: Text(
+                  "แก้ไขข้อมูลส่วนตัว",
+                  style: TextStyle(color: Colors.white, fontSize: 18),
                 ),
-                Text(
-                  "เป้าหมายน้ำหนัก: ${userProfile.targetWeight.toStringAsFixed(1)} กก.",
-                  style: TextStyle(fontSize: 18),
-                ),
-              ],
-            ),
-          ),
-          SizedBox(height: 40),
-
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Color.fromARGB(255, 70, 51, 43),
-            ),
-            onPressed: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => EditProfileScreen()),
-              );
-              // ข้อมูลจะอัปเดตอัตโนมัติผ่าน Stream
-            },
-            child: Text(
-              "แก้ไขข้อมูลส่วนตัว",
-              style: TextStyle(color: Colors.white, fontSize: 18),
-            ),
-          ),
-          SizedBox(height: 40),
-
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
-            onPressed: () async {
-              final authService = ref.read(authServiceProvider);
-              await authService.signOut();
-              if (context.mounted) {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (_) => WelcomeScreen()),
-                );
-              }
-            },
-            child: Text(
-              isTrialAccount ? "ออกจากบัญชีทดลอง" : "ล็อกเอาท์",
-              style: TextStyle(
-                color: Color.fromARGB(255, 70, 51, 43),
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
               ),
-            ),
+              SizedBox(height: 40),
+      
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
+                onPressed: () async {
+                  final authService = ref.read(authServiceProvider);
+                  await authService.signOut();
+                  if (context.mounted) {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (_) => WelcomeScreen()),
+                    );
+                  }
+                },
+                child: Text(
+                  isTrialAccount ? "ออกจากบัญชีทดลอง" : "ล็อกเอาท์",
+                  style: TextStyle(
+                    color: Color.fromARGB(255, 70, 51, 43),
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

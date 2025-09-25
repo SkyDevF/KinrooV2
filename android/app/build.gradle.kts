@@ -34,8 +34,8 @@ android {
         applicationId = "com.kinroo.app"
         minSdk = 23
         targetSdk = flutter.targetSdkVersion
-        versionCode = 6
-        versionName = "1.0.5"
+        versionCode = 7
+        versionName = "1.0.6"
     }
 
     signingConfigs {
