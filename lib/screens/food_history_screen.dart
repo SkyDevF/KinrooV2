@@ -130,126 +130,196 @@ final dailyNutritionProvider = Provider.family<DailyNutrition, DateTime>((
   );
 });
 
-final weeklyNutritionProvider = FutureProvider<Map<String, int>>((ref) async {
+// ปรับปรุง Weekly Nutrition Provider ให้ใช้งานได้จริง
+final weeklyNutritionProvider = FutureProvider.autoDispose<Map<String, int>>((
+  ref,
+) async {
   final user = FirebaseAuth.instance.currentUser;
   if (user == null) {
-    return {'totalCalories': 0, 'overCalories': 0, 'underCalories': 0};
+    return {
+      'totalCalories': 0,
+      'overCalories': 0,
+      'underCalories': 0,
+      'avgCalories': 0,
+      'daysWithData': 0,
+    };
   }
 
   final userProfile = ref.watch(userProfileProvider).value;
   final targetCalories = userProfile?.dailyCalories ?? 2000;
 
   final today = DateTime.now();
-  final startDate = today.subtract(const Duration(days: 6)); // 7 วันรวมวันนี้
+  final startDate = DateTime(
+    today.year,
+    today.month,
+    today.day,
+  ).subtract(const Duration(days: 6));
   final endDate = DateTime(today.year, today.month, today.day, 23, 59, 59);
 
-  final snapshot = await FirebaseFirestore.instance
-      .collection('users')
-      .doc(user.uid)
-      .collection('food_history')
-      .where('timestamp', isGreaterThanOrEqualTo: startDate)
-      .where('timestamp', isLessThanOrEqualTo: endDate)
-      .get();
+  try {
+    final snapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .collection('food_history')
+        .where('timestamp', isGreaterThanOrEqualTo: startDate)
+        .where('timestamp', isLessThanOrEqualTo: endDate)
+        .get();
 
-  // จัดกลุ่มข้อมูลตามวัน
-  Map<String, List<FoodHistoryItem>> dailyFoods = {};
-  for (var doc in snapshot.docs) {
-    final food = FoodHistoryItem.fromFirestore(doc.id, doc.data());
-    final dateKey =
-        '${food.timestamp.year}-${food.timestamp.month}-${food.timestamp.day}';
-    dailyFoods[dateKey] = (dailyFoods[dateKey] ?? [])..add(food);
-  }
-
-  int totalCalories = 0;
-  int totalOverCalories = 0;
-  int totalUnderCalories = 0;
-
-  // คำนวณสำหรับแต่ละวัน
-  for (int i = 0; i < 7; i++) {
-    final date = today.subtract(Duration(days: i));
-    final dateKey = '${date.year}-${date.month}-${date.day}';
-    final dayFoods = dailyFoods[dateKey] ?? [];
-
-    final dayCalories = dayFoods.fold(
-      0,
-      (total, food) => total + food.calories,
-    );
-    totalCalories += dayCalories;
-
-    final difference = dayCalories - targetCalories;
-    if (difference > 0) {
-      totalOverCalories += difference;
-    } else if (difference < 0) {
-      totalUnderCalories += difference.abs();
+    // จัดกลุ่มข้อมูลตามวัน
+    Map<String, List<FoodHistoryItem>> dailyFoods = {};
+    for (var doc in snapshot.docs) {
+      final food = FoodHistoryItem.fromFirestore(doc.id, doc.data());
+      final dateKey =
+          '${food.timestamp.year}-${food.timestamp.month.toString().padLeft(2, '0')}-${food.timestamp.day.toString().padLeft(2, '0')}';
+      dailyFoods[dateKey] = (dailyFoods[dateKey] ?? [])..add(food);
     }
-  }
 
-  return {
-    'totalCalories': totalCalories,
-    'overCalories': totalOverCalories,
-    'underCalories': totalUnderCalories,
-  };
+    int totalCalories = 0;
+    int totalOverCalories = 0;
+    int totalUnderCalories = 0;
+    int daysWithData = 0;
+
+    // คำนวณสำหรับแต่ละวัน (7 วันย้อนหลัง)
+    for (int i = 0; i < 7; i++) {
+      final date = today.subtract(Duration(days: i));
+      final dateKey =
+          '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+      final dayFoods = dailyFoods[dateKey] ?? [];
+
+      final dayCalories = dayFoods.fold(
+        0,
+        (total, food) => total + food.calories,
+      );
+
+      if (dayFoods.isNotEmpty) {
+        daysWithData++;
+      }
+
+      totalCalories += dayCalories;
+
+      final difference = dayCalories - targetCalories;
+      if (difference > 0) {
+        totalOverCalories += difference;
+      } else if (difference < 0 && dayFoods.isNotEmpty) {
+        totalUnderCalories += difference.abs();
+      }
+    }
+
+    final avgCalories = daysWithData > 0 ? (totalCalories / 7).round() : 0;
+
+    return {
+      'totalCalories': totalCalories,
+      'overCalories': totalOverCalories,
+      'underCalories': totalUnderCalories,
+      'avgCalories': avgCalories,
+      'daysWithData': daysWithData,
+    };
+  } catch (e) {
+    print('Error in weeklyNutritionProvider: $e');
+    return {
+      'totalCalories': 0,
+      'overCalories': 0,
+      'underCalories': 0,
+      'avgCalories': 0,
+      'daysWithData': 0,
+    };
+  }
 });
 
-final monthlyNutritionProvider = FutureProvider<Map<String, int>>((ref) async {
+// ปรับปรุง Monthly Nutrition Provider ให้ใช้งานได้จริง
+final monthlyNutritionProvider = FutureProvider.autoDispose<Map<String, int>>((
+  ref,
+) async {
   final user = FirebaseAuth.instance.currentUser;
   if (user == null) {
-    return {'totalCalories': 0, 'overCalories': 0, 'underCalories': 0};
+    return {
+      'totalCalories': 0,
+      'overCalories': 0,
+      'underCalories': 0,
+      'avgCalories': 0,
+      'daysWithData': 0,
+    };
   }
 
   final userProfile = ref.watch(userProfileProvider).value;
   final targetCalories = userProfile?.dailyCalories ?? 2000;
 
   final today = DateTime.now();
-  final startDate = today.subtract(const Duration(days: 29)); // 30 วันรวมวันนี้
+  final startDate = DateTime(
+    today.year,
+    today.month,
+    today.day,
+  ).subtract(const Duration(days: 29));
   final endDate = DateTime(today.year, today.month, today.day, 23, 59, 59);
 
-  final snapshot = await FirebaseFirestore.instance
-      .collection('users')
-      .doc(user.uid)
-      .collection('food_history')
-      .where('timestamp', isGreaterThanOrEqualTo: startDate)
-      .where('timestamp', isLessThanOrEqualTo: endDate)
-      .get();
+  try {
+    final snapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .collection('food_history')
+        .where('timestamp', isGreaterThanOrEqualTo: startDate)
+        .where('timestamp', isLessThanOrEqualTo: endDate)
+        .get();
 
-  // จัดกลุ่มข้อมูลตามวัน
-  Map<String, List<FoodHistoryItem>> dailyFoods = {};
-  for (var doc in snapshot.docs) {
-    final food = FoodHistoryItem.fromFirestore(doc.id, doc.data());
-    final dateKey =
-        '${food.timestamp.year}-${food.timestamp.month}-${food.timestamp.day}';
-    dailyFoods[dateKey] = (dailyFoods[dateKey] ?? [])..add(food);
-  }
-
-  int totalCalories = 0;
-  int totalOverCalories = 0;
-  int totalUnderCalories = 0;
-
-  // คำนวณสำหรับแต่ละวัน
-  for (int i = 0; i < 30; i++) {
-    final date = today.subtract(Duration(days: i));
-    final dateKey = '${date.year}-${date.month}-${date.day}';
-    final dayFoods = dailyFoods[dateKey] ?? [];
-
-    final dayCalories = dayFoods.fold(
-      0,
-      (total, food) => total + food.calories,
-    );
-    totalCalories += dayCalories;
-
-    final difference = dayCalories - targetCalories;
-    if (difference > 0) {
-      totalOverCalories += difference;
-    } else if (difference < 0) {
-      totalUnderCalories += difference.abs();
+    // จัดกลุ่มข้อมูลตามวัน
+    Map<String, List<FoodHistoryItem>> dailyFoods = {};
+    for (var doc in snapshot.docs) {
+      final food = FoodHistoryItem.fromFirestore(doc.id, doc.data());
+      final dateKey =
+          '${food.timestamp.year}-${food.timestamp.month.toString().padLeft(2, '0')}-${food.timestamp.day.toString().padLeft(2, '0')}';
+      dailyFoods[dateKey] = (dailyFoods[dateKey] ?? [])..add(food);
     }
-  }
 
-  return {
-    'totalCalories': totalCalories,
-    'overCalories': totalOverCalories,
-    'underCalories': totalUnderCalories,
-  };
+    int totalCalories = 0;
+    int totalOverCalories = 0;
+    int totalUnderCalories = 0;
+    int daysWithData = 0;
+
+    // คำนวณสำหรับแต่ละวัน (30 วันย้อนหลัง)
+    for (int i = 0; i < 30; i++) {
+      final date = today.subtract(Duration(days: i));
+      final dateKey =
+          '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+      final dayFoods = dailyFoods[dateKey] ?? [];
+
+      final dayCalories = dayFoods.fold(
+        0,
+        (total, food) => total + food.calories,
+      );
+
+      if (dayFoods.isNotEmpty) {
+        daysWithData++;
+      }
+
+      totalCalories += dayCalories;
+
+      final difference = dayCalories - targetCalories;
+      if (difference > 0) {
+        totalOverCalories += difference;
+      } else if (difference < 0 && dayFoods.isNotEmpty) {
+        totalUnderCalories += difference.abs();
+      }
+    }
+
+    final avgCalories = daysWithData > 0 ? (totalCalories / 30).round() : 0;
+
+    return {
+      'totalCalories': totalCalories,
+      'overCalories': totalOverCalories,
+      'underCalories': totalUnderCalories,
+      'avgCalories': avgCalories,
+      'daysWithData': daysWithData,
+    };
+  } catch (e) {
+    print('Error in monthlyNutritionProvider: $e');
+    return {
+      'totalCalories': 0,
+      'overCalories': 0,
+      'underCalories': 0,
+      'avgCalories': 0,
+      'daysWithData': 0,
+    };
+  }
 });
 
 class FoodHistoryScreen extends ConsumerStatefulWidget {
@@ -276,8 +346,10 @@ class _FoodHistoryScreenState extends ConsumerState<FoodHistoryScreen> {
           .doc(foodId)
           .delete();
 
-      // Refresh the food provider to update the UI
+      // Refresh providers to update the UI
       ref.invalidate(foodHistoryForDateProvider);
+      ref.invalidate(weeklyNutritionProvider);
+      ref.invalidate(monthlyNutritionProvider);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -310,60 +382,70 @@ class _FoodHistoryScreenState extends ConsumerState<FoodHistoryScreen> {
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 47, 130, 174),
       appBar: _buildAppBar(),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            _buildCalendarBox(),
-            const SizedBox(height: 16),
-            _buildNutritionSummaryCards(
-              weeklyNutritionAsync,
-              monthlyNutritionAsync,
-            ),
-            const SizedBox(height: 16),
-            _buildDailyNutritionBox(dailyNutrition),
-            const SizedBox(height: 16),
-            _buildCaloriesProgressBox(dailyNutrition),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildPieChartBox(
-                    'โปรตีน',
-                    dailyNutrition.protein,
-                    dailyNutrition.targetProtein,
-                    Colors.red,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _buildPieChartBox(
-                    'คาร์โบไฮเดรต',
-                    dailyNutrition.carbs,
-                    dailyNutrition.targetCarbs,
-                    Colors.orange,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            _buildPieChartBox(
-              'ไขมัน',
-              dailyNutrition.fat,
-              dailyNutrition.targetFat,
-              Colors.yellow,
-            ),
-            const SizedBox(height: 16),
-            _buildCardWrapper(
-              title: 'รายการอาหารที่บันทึกสำหรับวันที่เลือก',
-              child: foodHistory.when(
-                data: (foods) => _buildFoodListInMainScreen(foods),
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (error, stack) =>
-                    Center(child: Text('เกิดข้อผิดพลาด: $error')),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          // Refresh all providers when user pulls to refresh
+          ref.invalidate(weeklyNutritionProvider);
+          ref.invalidate(monthlyNutritionProvider);
+          ref.invalidate(foodHistoryForDateProvider);
+        },
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              _buildCalendarBox(),
+              const SizedBox(height: 16),
+              _buildNutritionSummaryCards(
+                weeklyNutritionAsync,
+                monthlyNutritionAsync,
               ),
-            ),
-          ],
+              const SizedBox(height: 16),
+              _buildDailyNutritionBox(dailyNutrition),
+              const SizedBox(height: 16),
+              _buildCaloriesProgressBox(dailyNutrition),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildPieChartBox(
+                      'โปรตีน',
+                      dailyNutrition.protein,
+                      dailyNutrition.targetProtein,
+                      Colors.red,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _buildPieChartBox(
+                      'คาร์โบไฮเดรต',
+                      dailyNutrition.carbs,
+                      dailyNutrition.targetCarbs,
+                      Colors.orange,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              _buildPieChartBox(
+                'ไขมัน',
+                dailyNutrition.fat,
+                dailyNutrition.targetFat,
+                Colors.yellow,
+              ),
+              const SizedBox(height: 16),
+              _buildCardWrapper(
+                title: 'รายการอาหารที่บันทึกสำหรับวันที่เลือก',
+                child: foodHistory.when(
+                  data: (foods) => _buildFoodListInMainScreen(foods),
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
+                  error: (error, stack) =>
+                      Center(child: Text('เกิดข้อผิดพลาด: $error')),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -379,6 +461,7 @@ class _FoodHistoryScreenState extends ConsumerState<FoodHistoryScreen> {
     );
   }
 
+  // ปรับปรุงการแสดงผลสรุป 7 วัน และ 30 วัน
   Widget _buildNutritionSummaryCards(
     AsyncValue<Map<String, int>> weeklyNutritionAsync,
     AsyncValue<Map<String, int>> monthlyNutritionAsync,
@@ -392,11 +475,16 @@ class _FoodHistoryScreenState extends ConsumerState<FoodHistoryScreen> {
               totalCalories: weeklyNutrition['totalCalories'] ?? 0,
               overCalories: weeklyNutrition['overCalories'] ?? 0,
               underCalories: weeklyNutrition['underCalories'] ?? 0,
+              avgCalories: weeklyNutrition['avgCalories'] ?? 0,
+              daysWithData: weeklyNutrition['daysWithData'] ?? 0,
               color: Colors.blue,
             ),
             loading: () => _buildLoadingSummaryCard('สรุป 7 วัน', Colors.blue),
-            error: (error, stack) =>
-                _buildErrorSummaryCard('สรุป 7 วัน', Colors.blue),
+            error: (error, stack) => _buildErrorSummaryCard(
+              'สรุป 7 วัน',
+              Colors.blue,
+              error.toString(),
+            ),
           ),
         ),
         const SizedBox(width: 8),
@@ -407,12 +495,17 @@ class _FoodHistoryScreenState extends ConsumerState<FoodHistoryScreen> {
               totalCalories: monthlyNutrition['totalCalories'] ?? 0,
               overCalories: monthlyNutrition['overCalories'] ?? 0,
               underCalories: monthlyNutrition['underCalories'] ?? 0,
+              avgCalories: monthlyNutrition['avgCalories'] ?? 0,
+              daysWithData: monthlyNutrition['daysWithData'] ?? 0,
               color: Colors.purple,
             ),
             loading: () =>
                 _buildLoadingSummaryCard('สรุป 30 วัน', Colors.purple),
-            error: (error, stack) =>
-                _buildErrorSummaryCard('สรุป 30 วัน', Colors.purple),
+            error: (error, stack) => _buildErrorSummaryCard(
+              'สรุป 30 วัน',
+              Colors.purple,
+              error.toString(),
+            ),
           ),
         ),
       ],
@@ -424,6 +517,8 @@ class _FoodHistoryScreenState extends ConsumerState<FoodHistoryScreen> {
     required int totalCalories,
     required int overCalories,
     required int underCalories,
+    required int avgCalories,
+    required int daysWithData,
     required Color color,
   }) {
     return _buildCardWrapper(
@@ -432,22 +527,43 @@ class _FoodHistoryScreenState extends ConsumerState<FoodHistoryScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'รวม: ${totalCalories.toString()} kcal',
-            style: const TextStyle(color: Colors.white, fontSize: 12),
+            'รวม: ${_formatNumber(totalCalories)} kcal',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 4),
           Text(
-            'กินเกิน: ${overCalories.toString()} kcal',
+            'เฉลี่ย: ${_formatNumber(avgCalories)} kcal/วัน',
+            style: const TextStyle(color: Colors.white70, fontSize: 11),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            'กินเกิน: ${_formatNumber(overCalories)} kcal',
             style: TextStyle(color: Colors.red[300], fontSize: 11),
           ),
           const SizedBox(height: 2),
           Text(
-            'กินขาด: ${underCalories.toString()} kcal',
+            'กินขาด: ${_formatNumber(underCalories)} kcal',
             style: TextStyle(color: Colors.orange[300], fontSize: 11),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            'มีข้อมูล: $daysWithData วัน',
+            style: const TextStyle(color: Colors.white60, fontSize: 10),
           ),
         ],
       ),
     );
+  }
+
+  String _formatNumber(int number) {
+    if (number >= 1000) {
+      return '${(number / 1000).toStringAsFixed(1)}k';
+    }
+    return number.toString();
   }
 
   Widget _buildLoadingSummaryCard(String title, Color color) {
@@ -457,31 +573,89 @@ class _FoodHistoryScreenState extends ConsumerState<FoodHistoryScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'กำลังโหลด...',
+            'กำลังโหลดข้อมูล...',
             style: TextStyle(color: Colors.white70, fontSize: 12),
           ),
-          SizedBox(height: 4),
-          CircularProgressIndicator(strokeWidth: 2),
+          SizedBox(height: 8),
+          Center(
+            child: SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Colors.white,
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildErrorSummaryCard(String title, Color color) {
+  Widget _buildErrorSummaryCard(String title, Color color, String error) {
     return _buildCardWrapper(
       title: title,
-      child: const Column(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          const Text(
             'เกิดข้อผิดพลาด',
             style: TextStyle(color: Colors.red, fontSize: 12),
           ),
-          SizedBox(height: 4),
-          Text(
+          const SizedBox(height: 4),
+          const Text(
             'ไม่สามารถโหลดข้อมูลได้',
             style: TextStyle(color: Colors.white70, fontSize: 11),
           ),
+          const SizedBox(height: 4),
+          GestureDetector(
+            onTap: () {
+              // Retry loading data
+              ref.invalidate(weeklyNutritionProvider);
+              ref.invalidate(monthlyNutritionProvider);
+            },
+            child: const Text(
+              'แตะเพื่อลองใหม่',
+              style: TextStyle(
+                color: Colors.blue,
+                fontSize: 10,
+                decoration: TextDecoration.underline,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCardWrapper({required String title, required Widget child}) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF16213E),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 12),
+          child,
         ],
       ),
     );
@@ -900,7 +1074,10 @@ class _FoodHistoryScreenState extends ConsumerState<FoodHistoryScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('ยกเลิก', style: TextStyle(color: Colors.grey)),
+            child: const Text(
+              'ยกเลิก',
+              style: TextStyle(color: Colors.white70),
+            ),
           ),
           TextButton(
             onPressed: () {
@@ -914,73 +1091,41 @@ class _FoodHistoryScreenState extends ConsumerState<FoodHistoryScreen> {
     );
   }
 
-  Widget _buildCardWrapper({required String title, required Widget child}) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF0F3460),
-        borderRadius: BorderRadius.circular(15),
-        boxShadow: const [
-          BoxShadow(color: Colors.black26, blurRadius: 8, offset: Offset(0, 4)),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 12),
-          child,
-        ],
-      ),
-    );
-  }
-
   void _showDayDetailDialog(DateTime selectedDay) {
-    final foodHistory = ref.watch(foodHistoryForDateProvider(selectedDay));
-    final nutrition = ref.watch(dailyNutritionProvider(selectedDay));
+    final dailyNutrition = ref.read(dailyNutritionProvider(selectedDay));
+    final foodHistoryAsync = ref.read(foodHistoryForDateProvider(selectedDay));
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF0F3460),
         title: Text(
-          'รายการอาหารวันที่ ${selectedDay.day}/${selectedDay.month}/${selectedDay.year}',
+          'รายละเอียดวันที่ ${selectedDay.day}/${selectedDay.month}/${selectedDay.year}',
           style: const TextStyle(color: Colors.white, fontSize: 16),
         ),
         content: SizedBox(
           width: double.maxFinite,
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildNutritionSummary(nutrition),
+              _buildNutritionSummary(dailyNutrition),
               const SizedBox(height: 16),
-              foodHistory.when(
-                data: (foods) => Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'รายการอาหาร (${foods.length} รายการ)',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    _buildFoodListInDialog(foods),
-                  ],
+              const Text(
+                'รายการอาหาร',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
                 ),
+              ),
+              const SizedBox(height: 8),
+              foodHistoryAsync.when(
+                data: (foods) => _buildFoodListInDialog(foods),
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (error, stack) => Text(
-                  'เกิดข้อผิดพลาด: $error',
-                  style: const TextStyle(color: Colors.red),
+                error: (error, stack) => Center(
+                  child: Text(
+                    'เกิดข้อผิดพลาด: $error',
+                    style: const TextStyle(color: Colors.red),
+                  ),
                 ),
               ),
             ],
@@ -989,10 +1134,7 @@ class _FoodHistoryScreenState extends ConsumerState<FoodHistoryScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text(
-              'ปิด',
-              style: TextStyle(color: Color(0xFFE94560)),
-            ),
+            child: const Text('ปิด', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
