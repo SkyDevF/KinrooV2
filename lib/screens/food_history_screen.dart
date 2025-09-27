@@ -330,7 +330,6 @@ class FoodHistoryScreen extends ConsumerStatefulWidget {
 }
 
 class _FoodHistoryScreenState extends ConsumerState<FoodHistoryScreen> {
-  CalendarFormat _calendarFormat = CalendarFormat.month;
   DateTime _focusedDay = DateTime.now();
 
   // Delete food item function
@@ -664,43 +663,57 @@ class _FoodHistoryScreenState extends ConsumerState<FoodHistoryScreen> {
   Widget _buildCalendarBox() {
     return _buildCardWrapper(
       title: 'ปฏิทินการกิน',
-      child: TableCalendar<FoodHistoryItem>(
-        firstDay: DateTime.utc(2020, 1, 1),
-        lastDay: DateTime.utc(2030, 12, 31),
-        focusedDay: _focusedDay,
-        calendarFormat: _calendarFormat,
-        selectedDayPredicate: (day) =>
-            isSameDay(ref.watch(selectedDateProvider), day),
-        onDaySelected: (selectedDay, focusedDay) {
-          ref.read(selectedDateProvider.notifier).state = selectedDay;
-          setState(() => _focusedDay = focusedDay);
-          _showDayDetailDialog(selectedDay);
-        },
-        onFormatChanged: (format) => setState(() => _calendarFormat = format),
-        calendarStyle: const CalendarStyle(
-          outsideDaysVisible: false,
-          todayDecoration: BoxDecoration(
-            color: Color(0xFFE94560),
-            shape: BoxShape.circle,
+      child: SizedBox(
+        height: 120, // ลดความสูงให้เหมาะกับแถวเดียว
+        child: TableCalendar<FoodHistoryItem>(
+          firstDay: DateTime.utc(2020, 1, 1),
+          lastDay: DateTime.utc(2030, 12, 31),
+          focusedDay: _focusedDay,
+          calendarFormat:
+              CalendarFormat.week, // เปลี่ยนเป็นแบบสัปดาห์ (แถวเดียว)
+          availableCalendarFormats: const {
+            CalendarFormat.week: 'Week', // จำกัดให้มีแค่รูปแบบสัปดาห์เท่านั้น
+          },
+          selectedDayPredicate: (day) =>
+              isSameDay(ref.watch(selectedDateProvider), day),
+          onDaySelected: (selectedDay, focusedDay) {
+            ref.read(selectedDateProvider.notifier).state = selectedDay;
+            setState(() => _focusedDay = focusedDay);
+            _showDayDetailDialog(selectedDay);
+          },
+          onFormatChanged: null, // ปิดการเปลี่ยนรูปแบบ
+          calendarStyle: const CalendarStyle(
+            outsideDaysVisible: false,
+            todayDecoration: BoxDecoration(
+              color: Color(0xFFE94560),
+              shape: BoxShape.circle,
+            ),
+            selectedDecoration: BoxDecoration(
+              color: Color.fromARGB(255, 47, 130, 174),
+              shape: BoxShape.circle,
+            ),
+            defaultTextStyle: TextStyle(color: Colors.white, fontSize: 14),
+            todayTextStyle: TextStyle(color: Colors.white, fontSize: 14),
+            selectedTextStyle: TextStyle(color: Colors.white, fontSize: 14),
+            cellMargin: EdgeInsets.all(2), // ลด margin ให้เหมาะกับแถวเดียว
+            rowDecoration: BoxDecoration(), // ลบ decoration ของแถว
           ),
-          selectedDecoration: BoxDecoration(
-            color: Color.fromARGB(255, 47, 130, 174),
-            shape: BoxShape.circle,
+          headerStyle: const HeaderStyle(
+            formatButtonVisible: false, // ซ่อนปุ่มเปลี่ยนรูปแบบ
+            titleCentered: true,
+            titleTextStyle: TextStyle(color: Colors.white, fontSize: 16),
+            leftChevronIcon: Icon(Icons.chevron_left, color: Colors.white),
+            rightChevronIcon: Icon(Icons.chevron_right, color: Colors.white),
+            headerPadding: EdgeInsets.symmetric(
+              vertical: 4,
+            ), // ลด padding ของ header
           ),
-          defaultTextStyle: TextStyle(color: Colors.white),
-          todayTextStyle: TextStyle(color: Colors.white),
-          selectedTextStyle: TextStyle(color: Colors.white),
-        ),
-        headerStyle: const HeaderStyle(
-          formatButtonVisible: false,
-          titleCentered: true,
-          titleTextStyle: TextStyle(color: Colors.white, fontSize: 16),
-          leftChevronIcon: Icon(Icons.chevron_left, color: Colors.white),
-          rightChevronIcon: Icon(Icons.chevron_right, color: Colors.white),
-        ),
-        daysOfWeekStyle: const DaysOfWeekStyle(
-          weekdayStyle: TextStyle(color: Colors.white70),
-          weekendStyle: TextStyle(color: Colors.white70),
+          daysOfWeekStyle: const DaysOfWeekStyle(
+            weekdayStyle: TextStyle(color: Colors.white70, fontSize: 12),
+            weekendStyle: TextStyle(color: Colors.white70, fontSize: 12),
+          ),
+          rowHeight: 40, // เพิ่มความสูงของแถวให้เหมาะสม
+          daysOfWeekHeight: 20, // ลดความสูงของแถววันในสัปดาห์
         ),
       ),
     );
