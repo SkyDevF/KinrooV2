@@ -21,10 +21,41 @@ class _GoogleRegisterScreenState extends State<GoogleRegisterScreen> {
   // ✅ สำหรับ Android ไม่ต้องระบุ clientId - จะใช้จาก google-services.json
   final GoogleSignIn _googleSignIn = GoogleSignIn(scopes: ['email']);
 
+  // ฟังก์ชันสำหรับเปลี่ยนบัญชี Google
+  Future<void> _switchGoogleAccount() async {
+    setState(() => _isLoading = true);
+
+    try {
+      // ล็อกเอาท์จาก Google และ Firebase
+      await _googleSignIn.signOut();
+      await _auth.signOut();
+
+      // เริ่มกระบวนการเลือกบัญชีใหม่
+      await _createAccountWithGoogle();
+    } catch (e) {
+      if (kDebugMode) {
+        print("Switch Account Error: $e");
+      }
+      setState(() => _isLoading = false);
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("เกิดข้อผิดพลาดในการเปลี่ยนบัญชี: ${e.toString()}"),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   Future<void> _createAccountWithGoogle() async {
     setState(() => _isLoading = true);
 
     try {
+      // ✅ ล็อกเอาท์จาก Google ก่อนเพื่อให้เลือกบัญชีใหม่ได้
+      await _googleSignIn.signOut();
+
       // Begin interactive sign in process
       final GoogleSignInAccount? gUser = await _googleSignIn.signIn();
 
@@ -59,13 +90,34 @@ class _GoogleRegisterScreenState extends State<GoogleRegisterScreen> {
 
       if (!mounted) return;
 
-      // Navigate to appropriate screen
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (_) => userDoc.exists ? HomeScreen() : InputBirthdayScreen(),
-        ),
-      );
+      // แสดงข้อความสำเร็จ
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              '🎉 เข้าสู่ระบบด้วย Google สำเร็จ!',
+              style: TextStyle(fontSize: 16),
+            ),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
+        );
+
+        // รอ 0.5 วินาทีแล้วไปหน้าถัดไป
+        await Future.delayed(const Duration(milliseconds: 500));
+
+        if (mounted) {
+          // Navigate to appropriate screen
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (_) => userDoc.exists
+                  ? const HomeScreen()
+                  : const InputBirthdayScreen(),
+            ),
+          );
+        }
+      }
     } catch (e) {
       if (kDebugMode) {
         print("Google Sign-Up Error: $e");
@@ -90,26 +142,26 @@ class _GoogleRegisterScreenState extends State<GoogleRegisterScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
       ),
       body: SafeArea(
         child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(
+              const Text(
                 "สร้างบัญชีด้วย Google",
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
-                  color: Colors.blue[900],
+                  color: Color(0xFF0D47A1),
                 ),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
 
               Text(
                 "เข้าใช้งาน Kinroo ด้วยบัญชี Google ของคุณ\nง่าย รวดเร็ว และปลอดภัย",
@@ -121,24 +173,27 @@ class _GoogleRegisterScreenState extends State<GoogleRegisterScreen> {
                 ),
               ),
 
-              SizedBox(height: 60),
+              const SizedBox(height: 60),
 
               // Google Sign Up Button
               ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.white,
                   foregroundColor: Colors.black87,
-                  padding: EdgeInsets.symmetric(vertical: 15, horizontal: 24),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 15,
+                    horizontal: 24,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                     side: BorderSide(color: Colors.grey[300]!),
                   ),
-                  minimumSize: Size(double.infinity, 55),
+                  minimumSize: const Size(double.infinity, 55),
                   elevation: 2,
                 ),
                 onPressed: _isLoading ? null : _createAccountWithGoogle,
                 icon: _isLoading
-                    ? SizedBox(
+                    ? const SizedBox(
                         width: 24,
                         height: 24,
                         child: CircularProgressIndicator(strokeWidth: 2),
@@ -150,11 +205,14 @@ class _GoogleRegisterScreenState extends State<GoogleRegisterScreen> {
                       ),
                 label: Text(
                   _isLoading ? "กำลังสร้างบัญชี..." : "สร้างบัญชีด้วย Google",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
 
-              SizedBox(height: 40),
+              const SizedBox(height: 20),
 
               Text(
                 "การสร้างบัญชีแสดงว่าคุณยอมรับ\nข้อกำหนดการใช้งานและนโยบายความเป็นส่วนตัว",

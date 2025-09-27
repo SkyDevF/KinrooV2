@@ -22,7 +22,7 @@ class HomeScreen extends ConsumerStatefulWidget {
 // This widget serves as the main home screen of the app, displaying user health data, food history, and navigation options.
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   double startWeight = 75.0;
-  PageController _pageController = PageController();
+  final PageController _pageController = PageController();
   Timer? _autoScrollTimer;
   int _currentFoodIndex = 0;
 
@@ -51,14 +51,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   void _startAutoScroll() {
-    _autoScrollTimer = Timer.periodic(Duration(seconds: 3), (timer) {
+    _autoScrollTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
       final recommendedFood = ref.read(recommendedFoodProvider);
       if (recommendedFood.isNotEmpty) {
         _currentFoodIndex = (_currentFoodIndex + 1) % recommendedFood.length;
         if (_pageController.hasClients) {
           _pageController.animateToPage(
             _currentFoodIndex,
-            duration: Duration(milliseconds: 500),
+            duration: const Duration(milliseconds: 500),
             curve: Curves.easeInOut,
           );
         }
@@ -84,7 +84,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final today = ref.watch(currentDateProvider);
 
     return Scaffold(
-      backgroundColor: Color.fromARGB(255, 47, 130, 174),
+      backgroundColor: const Color.fromARGB(255, 47, 130, 174),
       body: userProfileAsync.when(
         data: (userProfile) => SingleChildScrollView(
           child: Column(
@@ -104,7 +104,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ],
           ),
         ),
-        loading: () => Center(child: CircularProgressIndicator()),
+        loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stack) => Center(child: Text('เกิดข้อผิดพลาด: $error')),
       ),
       bottomNavigationBar: _buildNavigation(currentIndex),
@@ -117,13 +117,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     EdgeInsets? padding,
   }) {
     return Container(
-      margin: margin ?? EdgeInsets.all(25),
-      padding: padding ?? EdgeInsets.all(15),
+      margin: margin ?? const EdgeInsets.all(25),
+      padding: padding ?? const EdgeInsets.all(15),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(30),
         boxShadow: [
-          BoxShadow(color: Colors.black26, blurRadius: 30, spreadRadius: 20),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.26),
+            blurRadius: 30,
+            spreadRadius: 20,
+          ),
         ],
       ),
       child: child,
@@ -134,7 +138,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return LinearProgressIndicator(
       value: value,
       backgroundColor: Colors.grey[300],
-      color: color ?? Color.fromARGB(255, 70, 51, 43),
+      color: color ?? const Color.fromARGB(255, 70, 51, 43),
       minHeight: height,
     );
   }
@@ -461,27 +465,61 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final isTrialAccount = authService.isAnonymousUser();
 
     return Container(
-      padding: EdgeInsets.symmetric(vertical: 15, horizontal: 20),
-      color: Color.fromARGB(255, 70, 51, 43),
+      padding: const EdgeInsets.only(top: 40, bottom: 15, left: 10, right: 20),
+      color: const Color.fromARGB(255, 70, 51, 43),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          IconButton(
-            icon: Icon(Icons.person, size: 30, color: Colors.white),
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => ProfileScreen()),
+          // ปุ่มโปรไฟล์ที่ปรับปรุงแล้ว
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(25),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ProfileScreen()),
+                );
+              },
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(25),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.3),
+                    width: 1,
+                  ),
+                ),
+                child: const Icon(Icons.person, size: 28, color: Colors.white),
+              ),
             ),
           ),
-          // ✅ แสดงสถานะบัญชีทดลอง
+
+          // Logo ตรงกลาง
+          Image.asset(
+            'assets/icon/logo.png',
+            width: 120,
+            height: 60,
+            fit: BoxFit.contain,
+          ),
+
+          // ✅ แสดงสถานะบัญชีทดลอง หรือ spacer
           if (isTrialAccount)
             Container(
-              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
                 color: Colors.orange,
                 borderRadius: BorderRadius.circular(15),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.2),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
-              child: Text(
+              child: const Text(
                 "บัญชีทดลอง",
                 style: TextStyle(
                   color: Colors.white,
@@ -489,7 +527,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-            ),
+            )
+          else
+            // Spacer เพื่อให้ logo อยู่ตรงกลาง
+            const SizedBox(width: 52),
         ],
       ),
     );
