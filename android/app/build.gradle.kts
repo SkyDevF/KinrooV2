@@ -18,7 +18,7 @@ val keystoreProperties = Properties().apply {
 
 android {
     namespace = "com.kinroo.app"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 35  // อัปเดตเป็น API 35 สำหรับ Android 15
     ndkVersion = "27.0.12077973"
 
     compileOptions {
@@ -33,9 +33,14 @@ android {
     defaultConfig {
         applicationId = "com.kinroo.app"
         minSdk = 23
-        targetSdk = flutter.targetSdkVersion
-        versionCode = 9
-        versionName = "1.0.8"
+        targetSdk = 35  // เป้าหมาย API 35 สำหรับ Android 15
+        versionCode = 10  // เพิ่ม version code
+        versionName = "1.0.9"
+        
+        // รองรับ 16KB page size สำหรับ Android 15
+        ndk {
+            abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64")
+        }
     }
 
     signingConfigs {
@@ -60,6 +65,10 @@ dependencies {
     implementation("org.tensorflow:tensorflow-lite:2.12.0")
     implementation("org.tensorflow:tensorflow-lite-select-tf-ops:2.12.0")
     // implementation("org.tensorflow:tensorflow-lite-gpu:2.12.0") // ถ้าต้องการ
+    
+    // AndroidX Core สำหรับ Edge-to-Edge และ Android 15 compatibility
+    implementation("androidx.core:core-ktx:1.12.0")
+    implementation("androidx.activity:activity-ktx:1.8.2")
 }
 
 flutter {
